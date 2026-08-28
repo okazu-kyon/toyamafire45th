@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary-color: #8b7355;
+      --primary-hover: #6d5a42;
+      --accent-color: #c5a059;
+      --bg-color: #f7f5f0;
+      --card-bg: #ffffff;
+      --text-main: #333333;
+      --text-sub: #666666;
+      --danger-color: #8b0000;
+      --border-color: #e5dec9;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      background: var(--bg-color);
+      background-image: radial-gradient(#e5dec9 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      padding: 36px 28px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(139, 115, 85, 0.12);
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .container::before {
+      content: "";
+      position: absolute;
+      top: 6px; left: 6px; right: 6px; bottom: 6px;
+      border: 1px solid var(--border-color);
+      pointer-events: none;
+      border-radius: 4px;
+    }
+
+    .header-badge {
+      text-align: center;
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: var(--accent-color);
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-family: sans-serif;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--text-main);
+      margin: 0 0 12px 0;
+      font-size: 21px;
+      font-weight: bold;
+      line-height: 1.4;
+      letter-spacing: 1px;
+    }
+
+    .event-date {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-main);
+      background: #fdfbf7;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 0;
+      margin-bottom: 24px;
+      font-family: sans-serif;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-sub);
+      font-size: 13px;
+      margin-bottom: 20px;
+      font-family: sans-serif;
+    }
+
+    .initial-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: 20px 0 16px 0;
+    }
+
+    .btn-main-choice {
+      width: 100%;
+      padding: 18px 20px;
+      font-size: 15px;
+      font-weight: bold;
+      border: 1px solid var(--border-color);
+      background: #fdfbf7;
+      color: var(--text-main);
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      font-family: sans-serif;
+    }
+
+    .btn-main-choice:hover, .btn-main-choice:active {
+      border-color: var(--accent-color);
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(197, 160, 89, 0.2);
+    }
+
+    .btn-main-choice.cancel-style {
+      border-color: #f2e3e3;
+      background: #fffafa;
+      color: var(--danger-color);
+    }
+
+    .btn-main-choice.cancel-style:hover, .btn-main-choice.cancel-style:active {
+      border-color: var(--danger-color);
+      background: #ffffff;
+    }
+
+    .diamond-icon {
+      font-size: 14px;
+      color: var(--accent-color);
+    }
+
+    .diamond-icon.cancel {
+      color: var(--danger-color);
+    }
+
+    .type-selector {
+      display: flex;
+      gap: 8px;
+      background: #fdfbf7;
+      padding: 4px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      margin-bottom: 24px;
+      font-family: sans-serif;
+    }
+
+    .btn-type {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-type.active {
+      background: var(--primary-color);
+      color: #ffffff;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+      font-family: sans-serif;
+    }
+
+    label {
+      font-weight: bold;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    input, select {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      font-size: 16px;
+      color: var(--text-main);
+      background-color: #fdfbf7;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      outline: none;
+      font-family: sans-serif;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    /* 数値入力ボックスの増減矢印（スピンボタン）を非表示 */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b7355' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 36px;
+    }
+
+    input:focus, select:focus {
+      background-color: #ffffff;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.2);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background: var(--primary-color);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s ease;
+      letter-spacing: 2px;
+      font-family: sans-serif;
+    }
+
+    .btn-submit:hover, .btn-submit:active {
+      background: var(--primary-hover);
+    }
+
+    .btn-submit:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .notice {
+      font-size: 12px;
+      color: var(--text-sub);
+      background: #fdfbf7;
+      padding: 14px;
+      border: 1px dashed var(--border-color);
+      border-radius: 4px;
+      margin-top: 20px;
+      line-height: 1.6;
+      font-family: sans-serif;
+    }
+
+    .result-box {
+      text-align: center;
+      display: none;
+      font-family: sans-serif;
+    }
+
+    .code-card {
+      background: #fdfbf7;
+      border: 1px solid var(--border-color);
+      padding: 24px 16px;
+      border-radius: 4px;
+      margin: 24px 0;
+    }
+
+    .code-box {
+      font-size: 42px;
+      font-weight: bold;
+      color: var(--primary-color);
+      letter-spacing: 6px;
+      margin-top: 6px;
+    }
+
+    .label-hint {
+      font-size: 11px;
+      color: #c5a059;
+      font-weight: normal;
+      margin-top: 2px;
+      display: block;
+    }
+
+    /* 画面内エラーメッセージ用スタイル（強調版） */
+    .error-inline-msg {
+      display: none;
+      background: var(--danger-color);
+      color: #ffffff;
+      border: 1px solid #5a0000;
+      padding: 14px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: bold;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      text-align: center;
+      line-height: 1.5;
+      font-family: sans-serif;
+      box-shadow: 0 4px 12px rgba(139, 0, 0, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div id="formArea">
+    <div class="header-badge">事前お申し込みフォーム</div>
+    <h2>富山市消防音楽隊<br>創立45周年記念演奏会</h2>
+    <div class="event-date">日時：令和9年12月23日（木）</div>
+
+    <div id="stepSelect">
+      <p class="subtitle">ご希望の手続きを選択してください</p>
+      <div class="initial-selector">
+        <button type="button" class="btn-main-choice" onclick="startForm('新規')">
+          <span>演奏会への事前お申し込み</span>
+          <span class="diamond-icon">◆</span>
+        </button>
+        <button type="button" class="btn-main-choice cancel-style" onclick="startForm('キャンセル')">
+          <span>お申し込みのキャンセル</span>
+          <span class="diamond-icon cancel">◆</span>
+        </button>
+      </div>
+
+      <div class="notice">
+        💡 <strong>ご人数の変更をご希望の場合</strong><br>
+        一度キャンセルを完了させた後、あらためて「事前お申し込み」より正しい人数でお申し込み直しをお願いいたします。
+      </div>
+    </div>
+
+    <div id="stepInputs" style="display: none;">
+      <div class="type-selector">
+        <button type="button" id="btnNew" class="btn-type" onclick="selectType('新規')">新規お申し込み</button>
+        <button type="button" id="btnCancel" class="btn-type" onclick="selectType('キャンセル')">キャンセル</button>
+      </div>
+
+      <div id="newInputs">
+        <div class="form-group">
+          <label>来場者区分</label>
+          <select id="category">
+            <option value="一般">一般</option>
+            <option value="消防職員">消防職員</option>
+            <option value="消防団員">消防団員</option>
+            <option value="関係者">関係者</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>
+            ニックネーム（お名前）
+            <span class="label-hint">※本名や個人が特定できる情報の入力はお控えください</span>
+          </label>
+          <input type="text" id="nickname" placeholder="例：トヤマ / たろう / T.K">
+        </div>
+        <div class="form-group">
+          <label>ご人数（最大4名様まで）</label>
+          <select id="count">
+            <option value="1">1名</option>
+            <option value="2">2名</option>
+            <option value="3">3名</option>
+            <option value="4">4名</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="cancelInputs" style="display:none;">
+        <div class="form-group">
+          <label>取り消ししたい「5桁の受付番号」</label>
+          <input type="number" id="cancelCode" placeholder="例：14820">
+        </div>
+        <div class="form-group">
+          <label>お申し込み時の「ニックネーム」</label>
+          <input type="text" id="cancelNickname" placeholder="例：トヤマ / たろう / T.K">
+        </div>
+      </div>
+
+      <div id="errorInlineMsg" class="error-inline-msg"></div>
+
+      <button id="submitBtn" class="btn-submit" onclick="submitForm()">送信する</button>
+    </div>
+  </div>
+
+  <div id="resultArea" class="result-box">
+    <h2 id="resultTitle" style="margin-bottom:15px;">お申し込み完了</h2>
+    <p id="resultMsg" class="subtitle" style="margin-bottom:0;">当日の受付に必要な番号です。<br>画面をスクリーンショット等で保存してください。</p>
+    
+    <div id="codeContainer" class="code-card">
+      <div style="font-size:12px; font-weight:bold; color:var(--accent-color); letter-spacing:2px;">受付番号</div>
+      <div id="generatedCode" class="code-box">-----</div>
+    </div>
+
+    <p id="pFooterNotice" style="font-size:13px; color:var(--text-sub); margin-top:16px;">当日は受付スタッフに上記の番号をお伝えください。</p>
+  </div>
+</div>
+
+<script>
+  let currentType = "新規";
+
+  function startForm(type) {
+    document.getElementById('stepSelect').style.display = 'none';
+    document.getElementById('stepInputs').style.display = 'block';
+    selectType(type);
+  }
+
+  function selectType(type) {
+    currentType = type;
+    const btnNew = document.getElementById('btnNew');
+    const btnCancel = document.getElementById('btnCancel');
+    const newInputs = document.getElementById('newInputs');
+    const cancelInputs = document.getElementById('cancelInputs');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorInlineMsg = document.getElementById('errorInlineMsg');
+
+    errorInlineMsg.style.display = 'none';
+    errorInlineMsg.innerText = '';
+
+    if (type === "新規") {
+      btnNew.classList.add('active');
+      btnCancel.classList.remove('active');
+      newInputs.style.display = 'block';
+      cancelInputs.style.display = 'none';
+      submitBtn.innerText = '送信する';
+      submitBtn.style.background = 'var(--primary-color)';
+    } else {
+      btnCancel.classList.add('active');
+      btnNew.classList.remove('active');
+      newInputs.style.display = 'none';
+      cancelInputs.style.display = 'block';
+      submitBtn.innerText = 'キャンセルを確定する';
+      submitBtn.style.background = 'var(--danger-color)';
+    }
+  }
+
+  function showError(msg) {
+    const errorInlineMsg = document.getElementById('errorInlineMsg');
+    errorInlineMsg.innerText = msg;
+    errorInlineMsg.style.display = 'block';
+  }
+
+  function hideError() {
+    const errorInlineMsg = document.getElementById('errorInlineMsg');
+    errorInlineMsg.style.display = 'none';
+    errorInlineMsg.innerText = '';
+  }
+
+  function submitForm() {
+    const btn = document.getElementById('submitBtn');
+    hideError();
+
+    if (currentType === "新規") {
+      const category = document.getElementById('category').value;
+      const nickname = document.getElementById('nickname').value.trim();
+      const count = document.getElementById('count').value;
+
+      if (!nickname) {
+        showError("⚠️ ニックネームを入力してください");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "送信中...";
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (!res || !res.success) {
+            showError((res && res.message) ? "⚠️ " + res.message : "⚠️ エラーが発生しました。");
+            btn.disabled = false;
+            btn.innerText = "送信する";
+            return;
+          }
+          document.getElementById('formArea').style.display = 'none';
+          document.getElementById('resultArea').style.display = 'block';
+          document.getElementById('codeContainer').style.display = 'block';
+          document.getElementById('pFooterNotice').style.display = 'block';
+          document.getElementById('generatedCode').innerText = res.code;
+        })
+        .withFailureHandler(function(err) {
+          showError("⚠️ 通信エラーが発生しました: " + err.message);
+          btn.disabled = false;
+          btn.innerText = "送信する";
+        })
+        .registerNewUser(category, nickname, count);
+
+    } else {
+      const cancelCode = document.getElementById('cancelCode').value.trim();
+      const cancelNickname = document.getElementById('cancelNickname').value.trim();
+
+      if (!cancelCode) {
+        showError("⚠️ 受付番号を入力してください");
+        return;
+      }
+      if (!cancelNickname) {
+        showError("⚠️ お申し込み時のニックネームを入力してください");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "処理中...";
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (!res || !res.success) {
+            showError((res && res.message) ? "⚠️ " + res.message : "⚠️ 受付番号またはニックネームが一致しません。入力内容をご確認ください。");
+            btn.disabled = false;
+            btn.innerText = "キャンセルを確定する";
+            return;
+          }
+          document.getElementById('formArea').style.display = 'none';
+          document.getElementById('resultArea').style.display = 'block';
+          document.getElementById('codeContainer').style.display = 'none';
+          document.getElementById('pFooterNotice').style.display = 'none';
+          document.getElementById('resultTitle').innerText = "キャンセル完了";
+          document.getElementById('resultMsg').innerText = res.message;
+        })
+        .withFailureHandler(function(err) {
+          showError("⚠️ エラーが発生しました: " + err.message);
+          btn.disabled = false;
+          btn.innerText = "キャンセルを確定する";
+        })
+        .cancelUser(cancelCode, cancelNickname);
+    }
+  }
+</script>
+
+</body>
+</html>

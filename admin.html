@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    :root {
+      --primary-color: #8b7355;
+      --accent-color: #c5a059;
+      --bg-color: #f7f5f0;
+      --card-bg: #ffffff;
+      --text-main: #333333;
+      --text-sub: #666666;
+      --danger-color: #8b0000;
+      --success-color: #2e7d32;
+      --warning-color: #d97706;
+      --border-color: #e5dec9;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-color);
+      background-image: radial-gradient(#e5dec9 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .top-section {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      justify-content: flex-start;
+      overflow-y: auto;
+    }
+
+    .admin-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--accent-color);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .display-box {
+      width: 100%;
+      max-width: 380px;
+      font-size: 36px;
+      font-weight: bold;
+      letter-spacing: 6px;
+      padding: 10px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-color);
+      color: var(--primary-color);
+      box-shadow: 0 4px 12px rgba(139, 115, 85, 0.08);
+    }
+
+    .status-msg {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 10px;
+      min-height: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .result-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .result-card.success { border-color: var(--success-color); background: #f4fbf6; }
+    .result-card.warning { border-color: var(--danger-color); background: #fdf2f2; }
+
+    .nickname-val { font-size: 20px; font-weight: bold; color: var(--primary-color); margin: 4px 0; text-align: center; }
+    .detail-val { font-size: 15px; color: var(--text-main); font-weight: bold; margin-bottom: 8px; text-align: center; }
+
+    .action-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    
+    .btn-confirm {
+      width: 100%;
+      padding: 14px;
+      font-size: 17px;
+      font-weight: bold;
+      color: white;
+      background: var(--success-color);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .btn-confirm:active { background: #216e25; }
+
+    .sub-change-title { font-size: 12px; color: var(--text-sub); margin-top: 6px; margin-bottom: 4px; text-align: left; font-weight: bold; }
+    .shortcut-grid { display: flex; gap: 6px; }
+    
+    .btn-short {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 14px;
+      font-weight: bold;
+      background: #ffffff;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-short:active { background: var(--primary-color); color: white; }
+
+    .bottom-keypad-container {
+      width: 100%;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 10px 16px 24px 16px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+
+    .btn-key {
+      font-size: 24px;
+      font-weight: bold;
+      padding: 14px 0;
+      background: #fdfbf7;
+      border: 1px solid var(--border-color);
+      color: var(--primary-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .btn-key:active { background: var(--accent-color); color: #ffffff; }
+    
+    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 20px; }
+    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 20px; }
+
+    .toast-popup {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(139, 115, 85, 0.95);
+      color: #ffffff;
+      padding: 20px 30px;
+      border-radius: 12px;
+      border: 1px solid var(--accent-color);
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 9999;
+      min-width: 280px;
+      line-height: 1.5;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -40%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-section">
+  <div class="admin-title">受付用 照合システム</div>
+
+  <div id="display" class="display-box">-----</div>
+  <div id="statusMsg" class="status-msg">番号5桁を入力してください</div>
+
+  <div id="resultCard" class="result-card">
+    <div id="cardStatus" style="font-size:12px; font-weight:bold; color:var(--text-sub); text-align:center;">【未受付】</div>
+    <div id="cardName" class="nickname-val">--- 様</div>
+    <div id="cardDetail" class="detail-val">一般 / 1名</div>
+    
+    <div id="actionArea" class="action-group" style="display:none;">
+      <button id="btnMainConfirm" class="btn-confirm" onclick="confirmCheckIn(currentData.count)">
+        🟢 <span id="mainBtnText">1名</span> で受付確定
+      </button>
+
+      <div id="shortArea" style="display:none;">
+        <div class="sub-change-title">人数が違う場合はタップ（変更して受付）:</div>
+        <div id="shortcutGrid" class="shortcut-grid">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-keypad-container">
+  <div class="keypad">
+    <button class="btn-key" onclick="pressKey('1')">1</button>
+    <button class="btn-key" onclick="pressKey('2')">2</button>
+    <button class="btn-key" onclick="pressKey('3')">3</button>
+    <button class="btn-key" onclick="pressKey('4')">4</button>
+    <button class="btn-key" onclick="pressKey('5')">5</button>
+    <button class="btn-key" onclick="pressKey('6')">6</button>
+    <button class="btn-key" onclick="pressKey('7')">7</button>
+    <button class="btn-key" onclick="pressKey('8')">8</button>
+    <button class="btn-key" onclick="pressKey('9')">9</button>
+    <button class="btn-key btn-clear" onclick="clearKey()">C</button>
+    <button class="btn-key" onclick="pressKey('0')">0</button>
+    <button class="btn-key btn-bs" onclick="backspaceKey()">⌫</button>
+  </div>
+</div>
+
+<script>
+  let inputCode = "";
+  let currentData = null;
+
+  function updateDisplay() {
+    const disp = document.getElementById('display');
+    disp.innerText = inputCode ? inputCode.padEnd(5, '-') : "-----";
+    
+    if (inputCode.length === 5) {
+      searchCode();
+    }
+  }
+
+  function pressKey(num) {
+    if (inputCode.length < 5) {
+      inputCode += num;
+      updateDisplay();
+    }
+  }
+
+  function clearKey() {
+    inputCode = "";
+    currentData = null;
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('statusMsg').innerText = "番号5桁を入力してください";
+    document.getElementById('statusMsg').style.color = "var(--text-sub)";
+    updateDisplay();
+  }
+
+  function backspaceKey() {
+    if (inputCode.length > 0) {
+      inputCode = inputCode.slice(0, -1);
+      document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('statusMsg').innerText = "番号5桁を入力してください";
+      document.getElementById('statusMsg').style.color = "var(--text-sub)";
+      updateDisplay();
+    }
+  }
+
+  function searchCode() {
+    document.getElementById('statusMsg').innerText = "照会中...";
+    document.getElementById('statusMsg').style.color = "var(--primary-color)";
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        const card = document.getElementById('resultCard');
+        const actionArea = document.getElementById('actionArea');
+        const statusMsg = document.getElementById('statusMsg');
+
+        if (res.success) {
+          currentData = res;
+          card.style.display = 'block';
+          document.getElementById('cardName').innerText = res.nickname + " 様";
+          document.getElementById('cardDetail').innerText = res.category + " / 申込: " + res.count + "名";
+
+          if (res.status === "キャンセル") {
+            card.className = "result-card warning";
+            document.getElementById('cardStatus').innerText = "【キャンセル済み】";
+            document.getElementById('cardStatus').style.color = "var(--danger-color)";
+            actionArea.style.display = 'none';
+            statusMsg.innerText = "この申込はキャンセルされています";
+            statusMsg.style.color = "var(--danger-color)";
+          } else if (res.status === "受付済") {
+            card.className = "result-card warning";
+            document.getElementById('cardStatus').innerText = "【受付完了済み（入場: " + res.actualCount + "名）】";
+            document.getElementById('cardStatus').style.color = "var(--warning-color)";
+            actionArea.style.display = 'none';
+            statusMsg.innerText = "すでに受付が完了している番号です";
+            statusMsg.style.color = "var(--warning-color)";
+          } else {
+            card.className = "result-card success";
+            document.getElementById('cardStatus').innerText = "【未受付】";
+            document.getElementById('cardStatus').style.color = "var(--success-color)";
+            actionArea.style.display = 'flex';
+            statusMsg.innerText = "確認して受付ボタンを押してください";
+            statusMsg.style.color = "var(--success-color)";
+
+            document.getElementById('mainBtnText').innerText = res.count + "名";
+            setupShortcuts(parseInt(res.count, 10));
+          }
+        } else {
+          card.style.display = 'none';
+          statusMsg.innerText = res.message;
+          statusMsg.style.color = "var(--danger-color)";
+        }
+      })
+      .searchByCode(inputCode);
+  }
+
+  function setupShortcuts(maxCount) {
+    const shortArea = document.getElementById('shortArea');
+    const grid = document.getElementById('shortcutGrid');
+    grid.innerHTML = "";
+
+    if (maxCount > 1) {
+      shortArea.style.display = 'block';
+      for (let i = 1; i < maxCount; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-short';
+        btn.innerText = i + '名';
+        btn.onclick = function() { confirmCheckIn(i); };
+        grid.appendChild(btn);
+      }
+    } else {
+      shortArea.style.display = 'none';
+    }
+  }
+
+  function confirmCheckIn(count) {
+    if (!currentData) return;
+
+    document.getElementById('statusMsg').innerText = "受付処理中...";
+    document.getElementById('statusMsg').style.color = "var(--primary-color)";
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.success) {
+          showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 2000);
+          clearKey();
+        } else {
+          alert("エラー: " + res.message);
+        }
+      })
+      .checkInUser(currentData.code, count);
+  }
+
+  function showAutoToast(msg, duration) {
+    const oldToast = document.getElementById('autoToast');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'autoToast';
+    toast.className = 'toast-popup';
+    toast.innerHTML = msg;
+    document.body.appendChild(toast);
+
+    setTimeout(function() {
+      if (toast) {
+        toast.style.transition = "opacity 0.3s ease";
+        toast.style.opacity = "0";
+        setTimeout(function() { toast.remove(); }, 300);
+      }
+    }, duration);
+  }
+</script>
+
+</body>
+</html>
