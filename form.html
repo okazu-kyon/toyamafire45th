@@ -312,6 +312,11 @@
       font-family: sans-serif;
       box-shadow: 0 4px 12px rgba(139, 0, 0, 0.25);
     }
+    .loading-locked {
+      pointer-events: none !important;
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
   </style>
 </head>
 <body>
@@ -455,6 +460,18 @@
     errorInlineMsg.innerText = '';
   }
 
+  function setFormLock(lockState) {
+    const formArea = document.getElementById('formArea');
+    const typeSelector = document.querySelector('.type-selector');
+    if (lockState) {
+      if (formArea) formArea.classList.add('loading-locked');
+      if (typeSelector) typeSelector.classList.add('loading-locked');
+    } else {
+      if (formArea) formArea.classList.remove('loading-locked');
+      if (typeSelector) typeSelector.classList.remove('loading-locked');
+    }
+  }
+
   function submitForm() {
     const btn = document.getElementById('submitBtn');
     hideError();
@@ -469,11 +486,13 @@
         return;
       }
 
+      setFormLock(true);
       btn.disabled = true;
       btn.innerText = "送信中...";
 
       google.script.run
         .withSuccessHandler(function(res) {
+          setFormLock(false);
           if (!res || !res.success) {
             showError((res && res.message) ? "⚠️ " + res.message : "⚠️ エラーが発生しました。");
             btn.disabled = false;
@@ -487,6 +506,7 @@
           document.getElementById('generatedCode').innerText = res.code;
         })
         .withFailureHandler(function(err) {
+          setFormLock(false);
           showError("⚠️ 通信エラーが発生しました: " + err.message);
           btn.disabled = false;
           btn.innerText = "送信する";
@@ -506,11 +526,13 @@
         return;
       }
 
+      setFormLock(true);
       btn.disabled = true;
       btn.innerText = "処理中...";
 
       google.script.run
         .withSuccessHandler(function(res) {
+          setFormLock(false);
           if (!res || !res.success) {
             showError((res && res.message) ? "⚠️ " + res.message : "⚠️ 受付番号またはニックネームが一致しません。入力内容をご確認ください。");
             btn.disabled = false;
@@ -525,6 +547,7 @@
           document.getElementById('resultMsg').innerText = res.message;
         })
         .withFailureHandler(function(err) {
+          setFormLock(false);
           showError("⚠️ エラーが発生しました: " + err.message);
           btn.disabled = false;
           btn.innerText = "キャンセルを確定する";
@@ -534,5 +557,6 @@
   }
 </script>
 
+<div class="version-info" style="text-align:center;margin-top:12px;color:var(--text-sub);font-size:12px;">バージョン <?= version ?></div>
 </body>
 </html>

@@ -1,10 +1,12 @@
 // ==========================================
 // 富山市消防音楽隊 創立45周年記念演奏会
-// 受付管理システム バックエンド処理 (Ver 1.1)
+// 受付管理システム バックエンド処理 (Ver 1.2.4)
+// (Auto-sync with clasp enabled)
 // ==========================================
 
 const SHEET_NAME = 'フォーム返答';
 const CAPACITY_LIMIT = 500;
+const SYSTEM_VERSION = '1.2.4';
 
 /**
  * Webアプリの初期表示（HTMLの提供）
@@ -12,13 +14,15 @@ const CAPACITY_LIMIT = 500;
 function doGet(e) {
   const page = e.parameter.p || 'form';
   if (page === 'admin') {
-    return HtmlService.createTemplateFromFile('admin')
-      .evaluate()
+    const template = HtmlService.createTemplateFromFile('admin');
+    template.version = SYSTEM_VERSION;
+    return template.evaluate()
       .setTitle('受付用 照合システム')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
   }
-  return HtmlService.createTemplateFromFile('form')
-    .evaluate()
+  const template = HtmlService.createTemplateFromFile('form');
+  template.version = SYSTEM_VERSION;
+  return template.evaluate()
     .setTitle('富山市消防音楽隊 創立45周年記念演奏会 事前お申し込み')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
 }
@@ -41,6 +45,17 @@ function getTargetSheet() {
  * A:受付番号 / B:来場者区分 / C:ニックネーム / D:人数 / E:ステータス / F:入場人数 / G:日時
  */
 function registerNewUser(category, nickname, count) {
+  const lock = LockService.getScriptLock();
+  try {
+    // 同時書き込みを防ぐため最大30秒待機
+    lock.waitLock(30000);
+  } catch (e) {
+    return {
+      success: false,
+      message: 'アクセスが集中しています。しばらく経ってから再度お試しください。'
+    };
+  }
+
   try {
     const sheet = getTargetSheet();
     const data = sheet.getDataRange().getValues();
@@ -107,6 +122,9 @@ function registerNewUser(category, nickname, count) {
       success: false,
       message: 'エラーが発生しました: ' + error.toString()
     };
+  } finally {
+    // ロックを確実に解放
+    lock.releaseLock();
   }
 }
 
@@ -114,6 +132,17 @@ function registerNewUser(category, nickname, count) {
  * キャンセル処理（受付番号＋ニックネームの2重照合）
  */
 function cancelUser(code, nickname) {
+  const lock = LockService.getScriptLock();
+  try {
+    // 同時書き込みを防ぐため最大30秒待機
+    lock.waitLock(30000);
+  } catch (e) {
+    return {
+      success: false,
+      message: 'アクセスが集中しています。しばらく経ってから再度お試しください。'
+    };
+  }
+
   try {
     const sheet = getTargetSheet();
     const data = sheet.getDataRange().getValues();
@@ -161,6 +190,9 @@ function cancelUser(code, nickname) {
       success: false,
       message: 'エラーが発生しました: ' + error.toString()
     };
+  } finally {
+    // ロックを確実に解放
+    lock.releaseLock();
   }
 }
 
@@ -206,6 +238,17 @@ function searchByCode(code) {
  * チェックイン（入場確定）処理
  */
 function checkInUser(code, actualCount) {
+  const lock = LockService.getScriptLock();
+  try {
+    // 同時書き込みを防ぐため最大30秒待機
+    lock.waitLock(30000);
+  } catch (e) {
+    return {
+      success: false,
+      message: 'アクセスが集中しています。しばらく経ってから再度お試しください。'
+    };
+  }
+
   try {
     const sheet = getTargetSheet();
     const data = sheet.getDataRange().getValues();
@@ -234,6 +277,9 @@ function checkInUser(code, actualCount) {
       success: false,
       message: 'エラーが発生しました: ' + error.toString()
     };
+  } finally {
+    // ロックを確実に解放
+    lock.releaseLock();
   }
 }
 
