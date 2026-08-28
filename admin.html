@@ -198,7 +198,10 @@
 <body>
 
 <div class="top-section">
-  <div class="admin-title">受付用 照合システム</div>
+  <div style="display:flex;justify-content:space-between;width:100%;max-width:380px;margin-bottom:8px;align-items:center;">
+    <div class="admin-title" style="margin-bottom:0;">受付用 照合システム</div>
+    <div style="font-size:11px;color:var(--text-sub);font-weight:bold;font-family:sans-serif;">Ver <?= version ?></div>
+  </div>
 
   <div id="display" class="display-box">-----</div>
   <div id="statusMsg" class="status-msg">番号5桁を入力してください</div>
@@ -419,6 +422,5 @@
   }
 </script>
 
-<div class="version-info" style="text-align:center;margin-top:12px;color:var(--text-sub);font-size:12px;">バージョン <?= version ?></div>
 </body>
 </html>
