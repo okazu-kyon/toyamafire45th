@@ -5,13 +5,27 @@
 // ==========================================
 
 const SHEET_NAME = 'フォーム返答';
-const CAPACITY_LIMIT = 500;
+const CAPACITY_LIMIT = 2000;
 const SYSTEM_VERSION = '1.2.4';
 
 /**
  * Webアプリの初期表示（HTMLの提供）
  */
 function doGet(e) {
+  const action = e.parameter.action;
+
+  // GitHub Pages 等の外部WebアプリからのAPIリクエスト処理
+  if (action === 'search') {
+    const code = e.parameter.code;
+    const result = searchByCode(code);
+    return createJsonResponse(result, e.parameter.callback);
+  } else if (action === 'checkin') {
+    const code = e.parameter.code;
+    const actualCount = Number(e.parameter.count) || 1;
+    const result = checkInUser(code, actualCount);
+    return createJsonResponse(result, e.parameter.callback);
+  }
+
   const page = e.parameter.p || 'form';
   if (page === 'admin') {
     const template = HtmlService.createTemplateFromFile('admin');
@@ -25,6 +39,19 @@ function doGet(e) {
   return template.evaluate()
     .setTitle('富山市消防音楽隊 創立45周年記念演奏会 事前お申し込み')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+}
+
+/**
+ * JSON または JSONP レスポンスを生成
+ */
+function createJsonResponse(data, callback) {
+  const jsonStr = JSON.stringify(data);
+  if (callback) {
+    return ContentService.createTextOutput(callback + '(' + jsonStr + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(jsonStr)
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
@@ -71,7 +98,7 @@ function registerNewUser(category, nickname, count) {
     let currentTotalCount = 0;
     
     // 重複チェック & 現在の合計人数計算
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 5; i < data.length; i++) {
       const rowNickname = String(data[i][2]);      // C列: ニックネーム
       const rowCount = Number(data[i][3]) || 0;    // D列: 人数
       const rowStatus = String(data[i][4]).trim(); // E列: ステータス
@@ -156,7 +183,7 @@ function cancelUser(code, nickname) {
       };
     }
 
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 5; i < data.length; i++) {
       const rowCode = String(data[i][0]).trim();    // A列: 受付番号
       const rowNickname = String(data[i][2]);       // C列: ニックネーム
       const rowStatus = String(data[i][4]).trim();  // E列: ステータス
@@ -205,7 +232,7 @@ function searchByCode(code) {
     const data = sheet.getDataRange().getValues();
     const strCode = String(code).trim();
 
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 5; i < data.length; i++) {
       const rowCode = String(data[i][0]).trim(); // A列: 受付番号
 
       if (rowCode === strCode) {
@@ -254,7 +281,7 @@ function checkInUser(code, actualCount) {
     const data = sheet.getDataRange().getValues();
     const strCode = String(code).trim();
 
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 5; i < data.length; i++) {
       const rowCode = String(data[i][0]).trim(); // A列: 受付番号
 
       if (rowCode === strCode) {
@@ -288,7 +315,7 @@ function checkInUser(code, actualCount) {
  */
 function generateUniqueCode(data) {
   const existingCodes = new Set();
-  for (let i = 1; i < data.length; i++) {
+  for (let i = 5; i < data.length; i++) {
     existingCodes.add(String(data[i][0]).trim()); // A列: 受付番号
   }
 
@@ -311,4 +338,100 @@ function normalizeString(str) {
     .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
       return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
     });
+}
+
+/**
+ * 【初回セットアップ用】スプレッドシート上部に集計ダッシュボードを自動構築する
+ * ※ この関数はGASエディタから手動で1回だけ実行してください。
+ *   既存のヘッダー行(1行目)の上に4行を挿入し、
+ *   集計ラベル・数式・書式を自動設定します。
+ *   実行後は「表示 > 固定 > 5行」を手動で設定してください。
+ */
+function setupDashboard() {
+  const sheet = getTargetSheet();
+  
+  // ---- 上に4行挿入（既存ヘッダーが5行目、データが6行目～になる） ----
+  sheet.insertRowsBefore(1, 4);
+  
+  // ==========================
+  // 1行目: 全体集計ラベル
+  // ==========================
+  const row1Labels = ['定員', '総申込数', '残席数', '総入場数', '入場率', 'キャンセル数'];
+  sheet.getRange(1, 1, 1, row1Labels.length).setValues([row1Labels]);
+  sheet.getRange(1, 1, 1, row1Labels.length)
+    .setFontWeight('bold')
+    .setFontSize(9)
+    .setHorizontalAlignment('center')
+    .setBackground('#f0ebe0')
+    .setFontColor('#5a4a3a');
+  
+  // ==========================
+  // 2行目: 全体集計の数式・値
+  // ==========================
+  sheet.getRange('A2').setValue(CAPACITY_LIMIT);                            // 定員
+  sheet.getRange('B2').setFormula('=SUMIFS(D6:D, E6:E, "<>キャンセル")');   // 総申込数
+  sheet.getRange('C2').setFormula('=A2-B2');                                // 残席数
+  sheet.getRange('D2').setFormula('=SUM(F6:F)');                            // 総入場数
+  sheet.getRange('E2').setFormula('=IF(B2>0, D2/B2, 0)');                   // 入場率
+  sheet.getRange('F2').setFormula('=COUNTIF(E6:E, "キャンセル")');          // キャンセル数
+  
+  // 2行目の書式設定
+  sheet.getRange(2, 1, 1, 6)
+    .setFontWeight('bold')
+    .setFontSize(14)
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
+  sheet.getRange('E2').setNumberFormat('0.0%');  // 入場率を%表示
+  
+  // ==========================
+  // 3行目: 区分別集計ラベル
+  // ==========================
+  const row3Labels = ['一般(申込)', '一般(入場)', '職員(申込)', '職員(入場)', '団員(申込)', '団員(入場)', '関係者(申込)', '関係者(入場)'];
+  sheet.getRange(3, 1, 1, row3Labels.length).setValues([row3Labels]);
+  sheet.getRange(3, 1, 1, row3Labels.length)
+    .setFontWeight('bold')
+    .setFontSize(9)
+    .setHorizontalAlignment('center')
+    .setBackground('#f0ebe0')
+    .setFontColor('#5a4a3a');
+  
+  // ==========================
+  // 4行目: 区分別集計の数式
+  // ==========================
+  sheet.getRange('A4').setFormula('=SUMIFS(D6:D, B6:B, "一般", E6:E, "<>キャンセル")');
+  sheet.getRange('B4').setFormula('=SUMIFS(F6:F, B6:B, "一般")');
+  sheet.getRange('C4').setFormula('=SUMIFS(D6:D, B6:B, "消防職員", E6:E, "<>キャンセル")');
+  sheet.getRange('D4').setFormula('=SUMIFS(F6:F, B6:B, "消防職員")');
+  sheet.getRange('E4').setFormula('=SUMIFS(D6:D, B6:B, "消防団員", E6:E, "<>キャンセル")');
+  sheet.getRange('F4').setFormula('=SUMIFS(F6:F, B6:B, "消防団員")');
+  sheet.getRange('G4').setFormula('=SUMIFS(D6:D, B6:B, "関係者", E6:E, "<>キャンセル")');
+  sheet.getRange('H4').setFormula('=SUMIFS(F6:F, B6:B, "関係者")');
+  
+  // 4行目の書式設定
+  sheet.getRange(4, 1, 1, 8)
+    .setFontWeight('bold')
+    .setFontSize(12)
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
+  
+  // ==========================
+  // 5行目: データヘッダー行の書式整え
+  // ==========================
+  sheet.getRange(5, 1, 1, 7)
+    .setFontWeight('bold')
+    .setBackground('#e8e0d0')
+    .setHorizontalAlignment('center');
+  
+  // ==========================
+  // 罫線の設定
+  // ==========================
+  // 1-2行目（全体集計エリア）に外枠
+  sheet.getRange(1, 1, 2, 6).setBorder(true, true, true, true, null, null, '#8b7355', SpreadsheetApp.BorderStyle.SOLID);
+  // 3-4行目（区分別集計エリア）に外枠
+  sheet.getRange(3, 1, 2, 8).setBorder(true, true, true, true, null, null, '#8b7355', SpreadsheetApp.BorderStyle.SOLID);
+  // 5行目（ヘッダー行）に下線
+  sheet.getRange(5, 1, 1, 7).setBorder(null, null, true, null, null, null, '#8b7355', SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+  
+  SpreadsheetApp.flush();
+  Logger.log('✅ ダッシュボードのセットアップが完了しました。「表示 > 固定 > 5行」を手動で設定してください。');
 }
