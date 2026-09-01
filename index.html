@@ -28,32 +28,26 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    html, body {
-      height: 100%;
+    body {
       margin: 0;
       padding: 0;
-      overflow: hidden;
-    }
-
-    body {
       background: var(--bg-color);
       background-image: radial-gradient(#e5dec9 1.5px, transparent 1.5px);
       background-size: 18px 18px;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      align-items: center;
     }
 
     .main-container {
       width: 100%;
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 6px 12px 0 12px;
+      max-width: 440px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
       flex: 1;
-      overflow: hidden;
     }
 
     .app-header {
@@ -61,39 +55,71 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
     }
 
     .admin-title {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: bold;
       color: var(--accent-color);
       letter-spacing: 1px;
     }
 
     .status-badge {
-      font-size: 10px;
+      font-size: 11px;
       background: #e8e0d0;
       color: var(--text-main);
-      padding: 2px 6px;
-      border-radius: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
       font-weight: bold;
     }
 
-    /* コンパクトなカメラプレビュー窓（横長で薄型） */
+    /* モード切替タブ（QRスキャン / テンキー手入力） */
+    .tab-switch {
+      width: 100%;
+      display: flex;
+      background: #eadecd;
+      padding: 3px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .btn-tab {
+      flex: 1;
+      padding: 9px 0;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      background: transparent;
+      color: #6d5a42;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-tab.active {
+      background: #ffffff;
+      color: var(--primary-color);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* QRスキャナービュー（読み取りやすい正方形大画面） */
+    #viewScanner {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     .scanner-card {
       width: 100%;
-      height: 125px;
-      background: #111111;
-      border-radius: 8px;
+      aspect-ratio: 1 / 1;
+      max-height: 280px;
+      background: #000000;
+      border-radius: 14px;
       overflow: hidden;
-      margin-bottom: 4px;
       position: relative;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: 2px solid var(--border-color);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      margin-bottom: 10px;
     }
 
     #reader {
@@ -112,166 +138,205 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 130px;
-      height: 95px;
-      border: 2px dashed rgba(255,255,255,0.85);
-      border-radius: 8px;
+      width: 180px;
+      height: 180px;
+      border: 3px dashed rgba(255,255,255,0.9);
+      border-radius: 16px;
       pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.3);
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
+      animation: pulseGuide 2s infinite ease-in-out;
+    }
+    @keyframes pulseGuide {
+      0%, 100% { border-color: rgba(255,255,255,0.9); }
+      50% { border-color: var(--accent-color); }
     }
 
     .scanner-hint {
       position: absolute;
-      bottom: 3px;
+      bottom: 10px;
       left: 0;
       right: 0;
       text-align: center;
       color: #ffffff;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: bold;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
       pointer-events: none;
+    }
+
+    /* テンキー手入力ビュー */
+    #viewKeypad {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
     }
 
     /* ディスプレイ表示 */
     .display-box {
       width: 100%;
-      font-size: 26px;
+      font-size: 32px;
       font-weight: bold;
-      letter-spacing: 5px;
-      padding: 2px 10px;
+      letter-spacing: 6px;
+      padding: 6px 12px;
       background: var(--card-bg);
-      border-radius: 6px;
-      margin-bottom: 2px;
-      height: 38px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
       border: 1px solid var(--border-color);
       color: var(--primary-color);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
     .status-msg {
-      font-size: 11px;
+      font-size: 13px;
       color: var(--text-sub);
-      margin-bottom: 2px;
-      height: 16px;
+      margin-bottom: 8px;
+      min-height: 18px;
       font-weight: bold;
       text-align: center;
-      line-height: 16px;
     }
 
-    /* 照合結果カード（スキャン時に即座に大きく表示） */
-    .result-card {
-      width: 100%;
-      background: var(--card-bg);
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 4px;
-      display: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      animation: popIn 0.15s ease-out;
-    }
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.97); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    .result-card.success { border-color: var(--success-color); background: #f4fbf6; }
-    .result-card.warning { border-color: var(--danger-color); background: #fdf2f2; }
-
-    .nickname-val { font-size: 18px; font-weight: bold; color: var(--primary-color); margin: 1px 0; text-align: center; }
-    .detail-val { font-size: 13px; color: var(--text-main); font-weight: bold; margin-bottom: 4px; text-align: center; }
-
-    .action-group { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
-    
-    .btn-confirm {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      background: var(--success-color);
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    }
-    .btn-confirm:active { background: #216e25; }
-
-    .sub-change-title { font-size: 10px; color: var(--text-sub); margin-top: 2px; margin-bottom: 1px; text-align: left; font-weight: bold; }
-    .shortcut-grid { display: flex; gap: 4px; }
-    
-    .btn-short {
-      flex: 1;
-      padding: 6px 0;
-      font-size: 12px;
-      font-weight: bold;
-      background: #ffffff;
-      border: 1px solid var(--primary-color);
-      color: var(--primary-color);
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .btn-short:active { background: var(--primary-color); color: white; }
-
-    /* テンキーコンテナ（コンパクト化） */
-    .bottom-keypad-container {
-      width: 100%;
-      background: var(--card-bg);
-      border-top: 1px solid var(--border-color);
-      padding: 4px 12px 14px 12px;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
-    }
-
+    /* テンキー */
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
+      gap: 6px;
+      width: 100%;
       max-width: 380px;
       margin: 0 auto;
     }
 
     .btn-key {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: bold;
-      padding: 7px 0;
+      padding: 12px 0;
       background: #fdfbf7;
       border: 1px solid var(--border-color);
       color: var(--primary-color);
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       transition: background 0.1s;
     }
     .btn-key:active { background: var(--accent-color); color: #ffffff; }
-    
-    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 15px; }
-    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 15px; }
+    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 18px; }
+    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 18px; }
+
+    /* ==================================== */
+    /* 照合結果モーダルポップアップ（画面下からスッと出現） */
+    /* ==================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 1000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px 28px 20px;
+      box-shadow: 0 -8px 25px rgba(0,0,0,0.2);
+      animation: slideUp 0.2s ease-out;
+      border-top: 2px solid var(--accent-color);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-badge {
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+    }
+    .modal-name {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary-color);
+      text-align: center;
+      margin: 4px 0 8px 0;
+    }
+    .modal-detail {
+      font-size: 16px;
+      color: var(--text-main);
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .btn-confirm-large {
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background: var(--success-color);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+      margin-bottom: 12px;
+    }
+    .btn-confirm-large:active { background: #216e25; }
+
+    .btn-modal-close {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-sub);
+      background: #f0ebe0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .sub-change-title { font-size: 12px; color: var(--text-sub); margin-bottom: 6px; font-weight: bold; }
+    .shortcut-grid { display: flex; gap: 8px; margin-bottom: 14px; }
+    .btn-short {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 14px;
+      font-weight: bold;
+      background: #ffffff;
+      border: 1.5px solid var(--primary-color);
+      color: var(--primary-color);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-short:active { background: var(--primary-color); color: white; }
 
     /* トースト通知 */
     .toast-popup {
       position: fixed;
-      top: 30%;
+      top: 35%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(139, 115, 85, 0.95);
+      background: rgba(139, 115, 85, 0.96);
       color: #ffffff;
-      padding: 14px 20px;
-      border-radius: 8px;
+      padding: 18px 26px;
+      border-radius: 12px;
       border: 1px solid var(--accent-color);
-      font-size: 16px;
+      font-size: 17px;
       font-weight: bold;
       text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
       z-index: 9999;
-      min-width: 240px;
-      line-height: 1.3;
-      animation: fadeIn 0.15s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translate(-50%, -40%); }
-      to { opacity: 1; transform: translate(-50%, -50%); }
+      min-width: 260px;
+      line-height: 1.4;
+      animation: popIn 0.15s ease-out;
     }
 
     .loading-locked {
@@ -285,54 +350,67 @@
 
 <div class="main-container">
   <div class="app-header">
-    <div class="admin-title">受付照合システム (QRリーダー)</div>
-    <div class="status-badge" id="cameraStatus">📷 起動中...</div>
+    <div class="admin-title">受付照合システム</div>
+    <div class="status-badge" id="cameraStatus">📷 カメラ起動中</div>
   </div>
 
-  <!-- コンパクト常時カメラ読み取り窓 -->
-  <div class="scanner-card">
-    <div id="reader"></div>
-    <div class="scanner-overlay-guide"></div>
-    <div class="scanner-hint">枠内にQRをかざしてください</div>
+  <!-- モード切替タブ -->
+  <div class="tab-switch">
+    <button class="btn-tab active" id="tabScanner" onclick="switchMode('scanner')">📷 QRスキャン</button>
+    <button class="btn-tab" id="tabKeypad" onclick="switchMode('keypad')">🔢 テンキー手入力</button>
   </div>
 
-  <div id="display" class="display-box">-----</div>
-  <div id="statusMsg" class="status-msg">QRをかざすか5桁を入力してください</div>
+  <!-- ① QRスキャナー画面（読み取りやすい大画面） -->
+  <div id="viewScanner">
+    <div class="scanner-card">
+      <div id="reader"></div>
+      <div class="scanner-overlay-guide"></div>
+      <div class="scanner-hint">枠内にQRコードをかざしてください</div>
+    </div>
+    <div id="scannerStatusMsg" class="status-msg">QRコードを枠内にかざすと自動照合します</div>
+  </div>
 
-  <!-- 照合結果表示カード -->
-  <div id="resultCard" class="result-card">
-    <div id="cardStatus" style="font-size:11px; font-weight:bold; color:var(--text-sub); text-align:center;">【未受付】</div>
-    <div id="cardName" class="nickname-val">--- 様</div>
-    <div id="cardDetail" class="detail-val">一般 / 1名</div>
-    
-    <div id="actionArea" class="action-group" style="display:none;">
-      <button id="btnMainConfirm" class="btn-confirm" onclick="confirmCheckIn(currentData.count)">
-        🟢 <span id="mainBtnText">1名</span> で受付確定
-      </button>
+  <!-- ② テンキー手入力画面 -->
+  <div id="viewKeypad">
+    <div id="display" class="display-box">-----</div>
+    <div id="statusMsg" class="status-msg">番号5桁を入力してください</div>
 
-      <div id="shortArea" style="display:none;">
-        <div class="sub-change-title">人数変更して受付:</div>
-        <div id="shortcutGrid" class="shortcut-grid"></div>
-      </div>
+    <div class="keypad">
+      <button class="btn-key" onclick="pressKey('1')">1</button>
+      <button class="btn-key" onclick="pressKey('2')">2</button>
+      <button class="btn-key" onclick="pressKey('3')">3</button>
+      <button class="btn-key" onclick="pressKey('4')">4</button>
+      <button class="btn-key" onclick="pressKey('5')">5</button>
+      <button class="btn-key" onclick="pressKey('6')">6</button>
+      <button class="btn-key" onclick="pressKey('7')">7</button>
+      <button class="btn-key" onclick="pressKey('8')">8</button>
+      <button class="btn-key" onclick="pressKey('9')">9</button>
+      <button class="btn-key btn-clear" onclick="clearKey()">C</button>
+      <button class="btn-key" onclick="pressKey('0')">0</button>
+      <button class="btn-key btn-bs" onclick="backspaceKey()">⌫</button>
     </div>
   </div>
 </div>
 
-<!-- テンキー手入力エリア -->
-<div class="bottom-keypad-container" id="keypadContainer">
-  <div class="keypad">
-    <button class="btn-key" onclick="pressKey('1')">1</button>
-    <button class="btn-key" onclick="pressKey('2')">2</button>
-    <button class="btn-key" onclick="pressKey('3')">3</button>
-    <button class="btn-key" onclick="pressKey('4')">4</button>
-    <button class="btn-key" onclick="pressKey('5')">5</button>
-    <button class="btn-key" onclick="pressKey('6')">6</button>
-    <button class="btn-key" onclick="pressKey('7')">7</button>
-    <button class="btn-key" onclick="pressKey('8')">8</button>
-    <button class="btn-key" onclick="pressKey('9')">9</button>
-    <button class="btn-key btn-clear" onclick="clearKey()">C</button>
-    <button class="btn-key" onclick="pressKey('0')">0</button>
-    <button class="btn-key btn-bs" onclick="backspaceKey()">⌫</button>
+<!-- ③ 照合結果ポップアップシート（画面下からスムーズに出現） -->
+<div id="resultModal" class="modal-overlay">
+  <div class="modal-sheet">
+    <div id="modalBadge" class="modal-badge" style="color:var(--success-color);">【未受付】</div>
+    <div id="modalName" class="modal-name">--- 様</div>
+    <div id="modalDetail" class="modal-detail">一般 / 1名</div>
+
+    <div id="modalActionArea">
+      <button id="btnModalConfirm" class="btn-confirm-large" onclick="confirmCheckIn(currentData.count)">
+        🟢 <span id="modalBtnText">1名</span> で受付確定
+      </button>
+
+      <div id="modalShortArea" style="display:none;">
+        <div class="sub-change-title">人数を変更して受付:</div>
+        <div id="modalShortcutGrid" class="shortcut-grid"></div>
+      </div>
+    </div>
+
+    <button class="btn-modal-close" onclick="closeResultModal()">閉じる（次のスキャンへ）</button>
   </div>
 </div>
 
@@ -402,12 +480,30 @@
     }
   }
 
+  function switchMode(mode) {
+    const btnScanner = document.getElementById('tabScanner');
+    const btnKeypad = document.getElementById('tabKeypad');
+    const viewScanner = document.getElementById('viewScanner');
+    const viewKeypad = document.getElementById('viewKeypad');
+
+    if (mode === 'scanner') {
+      btnScanner.classList.add('active');
+      btnKeypad.classList.remove('active');
+      viewScanner.style.display = 'flex';
+      viewKeypad.style.display = 'none';
+    } else {
+      btnKeypad.classList.add('active');
+      btnScanner.classList.remove('active');
+      viewScanner.style.display = 'none';
+      viewKeypad.style.display = 'flex';
+    }
+  }
+
   function clearKey() {
     if (isLoading) return;
     inputCode = "";
     currentData = null;
-    document.getElementById('resultCard').style.display = 'none';
-    document.getElementById('statusMsg').innerText = "QRをかざすか5桁を入力してください";
+    document.getElementById('statusMsg').innerText = "番号5桁を入力してください";
     document.getElementById('statusMsg').style.color = "var(--text-sub)";
     updateDisplay();
   }
@@ -416,8 +512,7 @@
     if (isLoading) return;
     if (inputCode.length > 0) {
       inputCode = inputCode.slice(0, -1);
-      document.getElementById('resultCard').style.display = 'none';
-      document.getElementById('statusMsg').innerText = "QRをかざすか5桁を入力してください";
+      document.getElementById('statusMsg').innerText = "番号5桁を入力してください";
       document.getElementById('statusMsg').style.color = "var(--text-sub)";
       updateDisplay();
     }
@@ -428,92 +523,96 @@
     setLock(true);
     document.getElementById('statusMsg').innerText = "照会中...";
     document.getElementById('statusMsg').style.color = "var(--primary-color)";
+    document.getElementById('scannerStatusMsg').innerText = "照会中...";
+    document.getElementById('scannerStatusMsg').style.color = "var(--primary-color)";
 
     callGasApi(
       { action: 'search', code: inputCode },
       function(res) {
         setLock(false);
-        const card = document.getElementById('resultCard');
-        const actionArea = document.getElementById('actionArea');
-        const statusMsg = document.getElementById('statusMsg');
-
         if (res && res.success) {
           currentData = res;
-          card.style.display = 'block';
-          document.getElementById('cardName').innerText = res.nickname + " 様";
-          document.getElementById('cardDetail').innerText = res.category + " / 申込: " + res.count + "名";
-
-          if (res.status === "キャンセル") {
-            card.className = "result-card warning";
-            document.getElementById('cardStatus').innerText = "【キャンセル済み】";
-            document.getElementById('cardStatus').style.color = "var(--danger-color)";
-            actionArea.style.display = 'none';
-            statusMsg.innerText = "この申込はキャンセルされています";
-            statusMsg.style.color = "var(--danger-color)";
-          } else if (res.status === "受付済") {
-            card.className = "result-card warning";
-            document.getElementById('cardStatus').innerText = "【受付完了済み（入場: " + res.actualCount + "名）】";
-            document.getElementById('cardStatus').style.color = "var(--warning-color)";
-            actionArea.style.display = 'none';
-            statusMsg.innerText = "すでに受付が完了している番号です";
-            statusMsg.style.color = "var(--warning-color)";
-          } else {
-            card.className = "result-card success";
-            document.getElementById('cardStatus').innerText = "【未受付】";
-            document.getElementById('cardStatus').style.color = "var(--success-color)";
-            actionArea.style.display = 'flex';
-            statusMsg.innerText = "確認して受付確定を押してください";
-            statusMsg.style.color = "var(--success-color)";
-
-            document.getElementById('mainBtnText').innerText = res.count + "名";
-            setupShortcuts(parseInt(res.count, 10));
-          }
+          openResultModal(res);
+          document.getElementById('statusMsg').innerText = "確認して受付確定を押してください";
+          document.getElementById('scannerStatusMsg').innerText = "QRコードを枠内にかざすと自動照合します";
+          document.getElementById('scannerStatusMsg').style.color = "var(--text-sub)";
         } else {
-          card.style.display = 'none';
-          statusMsg.innerText = (res && res.message) ? res.message : "該当する受付番号が存在しません";
-          statusMsg.style.color = "var(--danger-color)";
+          document.getElementById('statusMsg').innerText = (res && res.message) ? res.message : "該当する受付番号が存在しません";
+          document.getElementById('statusMsg').style.color = "var(--danger-color)";
+          document.getElementById('scannerStatusMsg').innerText = "該当する受付番号が存在しません";
+          document.getElementById('scannerStatusMsg').style.color = "var(--danger-color)";
         }
       },
       function(err) {
         setLock(false);
-        document.getElementById('resultCard').style.display = 'none';
         document.getElementById('statusMsg').innerText = "通信エラーが発生しました";
         document.getElementById('statusMsg').style.color = "var(--danger-color)";
+        document.getElementById('scannerStatusMsg').innerText = "通信エラーが発生しました";
+        document.getElementById('scannerStatusMsg').style.color = "var(--danger-color)";
       }
     );
   }
 
-  function setupShortcuts(maxCount) {
-    const shortArea = document.getElementById('shortArea');
-    const grid = document.getElementById('shortcutGrid');
-    grid.innerHTML = "";
+  function openResultModal(res) {
+    const modal = document.getElementById('resultModal');
+    const badge = document.getElementById('modalBadge');
+    const actionArea = document.getElementById('modalActionArea');
+    const shortArea = document.getElementById('modalShortArea');
+    const grid = document.getElementById('modalShortcutGrid');
 
-    if (maxCount > 1) {
-      shortArea.style.display = 'block';
-      for (let i = 1; i < maxCount; i++) {
-        const btn = document.createElement('button');
-        btn.className = 'btn-short';
-        btn.innerText = i + '名';
-        btn.onclick = function() { confirmCheckIn(i); };
-        grid.appendChild(btn);
-      }
+    document.getElementById('modalName').innerText = res.nickname + " 様";
+    document.getElementById('modalDetail').innerText = res.category + " / 申込: " + res.count + "名";
+
+    if (res.status === "キャンセル") {
+      badge.innerText = "【キャンセル済み】";
+      badge.style.color = "var(--danger-color)";
+      actionArea.style.display = 'none';
+    } else if (res.status === "受付済") {
+      badge.innerText = "【受付完了済み（入場: " + res.actualCount + "名）】";
+      badge.style.color = "var(--warning-color)";
+      actionArea.style.display = 'none';
     } else {
-      shortArea.style.display = 'none';
+      badge.innerText = "【未受付】";
+      badge.style.color = "var(--success-color)";
+      actionArea.style.display = 'block';
+      document.getElementById('modalBtnText').innerText = res.count + "名";
+
+      const maxCount = parseInt(res.count, 10);
+      grid.innerHTML = "";
+      if (maxCount > 1) {
+        shortArea.style.display = 'block';
+        for (let i = 1; i < maxCount; i++) {
+          const btn = document.createElement('button');
+          btn.className = 'btn-short';
+          btn.innerText = i + '名';
+          btn.onclick = function() { confirmCheckIn(i); };
+          grid.appendChild(btn);
+        }
+      } else {
+        shortArea.style.display = 'none';
+      }
     }
+
+    modal.style.display = 'flex';
+  }
+
+  function closeResultModal() {
+    document.getElementById('resultModal').style.display = 'none';
+    inputCode = "";
+    lastScannedCode = "";
+    updateDisplay();
   }
 
   function confirmCheckIn(count) {
     if (isLoading || !currentData) return;
     setLock(true);
 
-    document.getElementById('statusMsg').innerText = "受付処理中...";
-    document.getElementById('statusMsg').style.color = "var(--primary-color)";
-
     callGasApi(
       { action: 'checkin', code: currentData.code, count: count },
       function(res) {
         setLock(false);
         if (res && res.success) {
+          closeResultModal();
           showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 2200);
           clearKey();
         } else {
@@ -547,14 +646,14 @@
   }
 
   // ============================
-  // 常時QRコードスキャナー初期化
+  // 常時QRコードスキャナー初期化（大画面・高感度）
   // ============================
   function initCameraScanner() {
     const html5QrCode = new Html5Qrcode("reader");
     const config = {
-      fps: 15,
-      qrbox: { width: 220, height: 100 },
-      aspectRatio: 1.777778
+      fps: 20,
+      qrbox: { width: 200, height: 200 },
+      aspectRatio: 1.0
     };
 
     html5QrCode.start(
@@ -566,9 +665,8 @@
         if (code && code !== lastScannedCode && !isLoading) {
           lastScannedCode = code;
           inputCode = code;
-          updateDisplay();
+          searchCode();
 
-          // 3秒間同じQRの重複再スキャンを防止
           clearTimeout(scanCooldownTimer);
           scanCooldownTimer = setTimeout(function() {
             lastScannedCode = "";
@@ -601,7 +699,6 @@
     return null;
   }
 
-  // ページ読み込み時にカメラを起動
   window.addEventListener('DOMContentLoaded', function() {
     initCameraScanner();
   });
