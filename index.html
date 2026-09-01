@@ -646,14 +646,16 @@
   }
 
   // ============================
-  // 常時QRコードスキャナー初期化（大画面・高感度）
+  // 常時QRコードスキャナー初期化（全画面認識・高感度）
   // ============================
   function initCameraScanner() {
     const html5QrCode = new Html5Qrcode("reader");
     const config = {
-      fps: 20,
-      qrbox: { width: 200, height: 200 },
-      aspectRatio: 1.0
+      fps: 25,
+      aspectRatio: 1.0,
+      experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true
+      }
     };
 
     html5QrCode.start(
@@ -661,6 +663,7 @@
       config,
       function onScanSuccess(decodedText) {
         // QRコード読み取り成功
+        console.log("Scanned text:", decodedText);
         const code = extractCode(decodedText);
         if (code && code !== lastScannedCode && !isLoading) {
           lastScannedCode = code;
@@ -673,14 +676,15 @@
           }, 3000);
         }
       },
-      function onScanFailure() {
-        // スキャン継続
+      function onScanFailure(error) {
+        // スキャン継続中
       }
     ).then(function() {
       document.getElementById('cameraStatus').innerText = "🟢 カメラ稼働中";
       document.getElementById('cameraStatus').style.background = "#e6f4ea";
       document.getElementById('cameraStatus').style.color = "#137333";
     }).catch(function(err) {
+      console.error("Camera start error:", err);
       document.getElementById('cameraStatus').innerText = "⚠️ カメラOFF";
       document.getElementById('cameraStatus').style.background = "#fce8e6";
       document.getElementById('cameraStatus').style.color = "#c5221f";
@@ -688,13 +692,21 @@
   }
 
   function extractCode(text) {
-    const trimmed = text.trim();
+    if (!text) return null;
+    const trimmed = String(text).trim();
+    // 5桁数字そのまま
     if (/^\d{5}$/.test(trimmed)) {
       return trimmed;
     }
-    const match = trimmed.match(/(\d{5})/);
-    if (match) {
-      return match[1];
+    // URLパラメーター code=XXXXX から抽出
+    const urlMatch = trimmed.match(/[?&]code=(\d{5})/);
+    if (urlMatch) {
+      return urlMatch[1];
+    }
+    // 文字列中の5桁数字を抽出
+    const numMatch = trimmed.match(/(\d{5})/);
+    if (numMatch) {
+      return numMatch[1];
     }
     return null;
   }
