@@ -28,27 +28,32 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
+      overflow: hidden;
+    }
+
+    body {
       background: var(--bg-color);
       background-image: radial-gradient(#e5dec9 1.5px, transparent 1.5px);
       background-size: 18px 18px;
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: space-between;
     }
 
     .main-container {
       width: 100%;
       max-width: 420px;
-      padding: 12px 16px;
+      margin: 0 auto;
+      padding: 6px 12px 0 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       flex: 1;
+      overflow: hidden;
     }
 
     .app-header {
@@ -56,41 +61,50 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .admin-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
       color: var(--accent-color);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .status-badge {
-      font-size: 11px;
+      font-size: 10px;
       background: #e8e0d0;
       color: var(--text-main);
-      padding: 3px 8px;
-      border-radius: 12px;
+      padding: 2px 6px;
+      border-radius: 10px;
       font-weight: bold;
     }
 
-    /* カメラプレビュー窓 */
+    /* コンパクトなカメラプレビュー窓（横長で薄型） */
     .scanner-card {
       width: 100%;
-      background: #1a1a1a;
-      border-radius: 12px;
+      height: 125px;
+      background: #111111;
+      border-radius: 8px;
       overflow: hidden;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
       position: relative;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      border: 2px solid var(--border-color);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #reader {
-      width: 100%;
-      min-height: 180px;
+      width: 100% !important;
+      height: 100% !important;
+      border: none !important;
+    }
+    #reader video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
     }
 
     .scanner-overlay-guide {
@@ -98,161 +112,160 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 140px;
-      height: 140px;
-      border: 2px dashed rgba(255,255,255,0.7);
-      border-radius: 12px;
+      width: 130px;
+      height: 95px;
+      border: 2px dashed rgba(255,255,255,0.85);
+      border-radius: 8px;
       pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.25);
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.3);
     }
 
     .scanner-hint {
       position: absolute;
-      bottom: 8px;
+      bottom: 3px;
       left: 0;
       right: 0;
       text-align: center;
       color: #ffffff;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.9);
       pointer-events: none;
     }
 
     /* ディスプレイ表示 */
     .display-box {
       width: 100%;
-      font-size: 32px;
+      font-size: 26px;
       font-weight: bold;
-      letter-spacing: 6px;
-      padding: 6px 12px;
+      letter-spacing: 5px;
+      padding: 2px 10px;
       background: var(--card-bg);
-      border-radius: 8px;
-      margin-bottom: 6px;
-      height: 50px;
+      border-radius: 6px;
+      margin-bottom: 2px;
+      height: 38px;
       display: flex;
       align-items: center;
       justify-content: center;
       border: 1px solid var(--border-color);
       color: var(--primary-color);
-      box-shadow: 0 2px 8px rgba(139, 115, 85, 0.08);
     }
 
     .status-msg {
-      font-size: 13px;
+      font-size: 11px;
       color: var(--text-sub);
-      margin-bottom: 8px;
-      min-height: 18px;
+      margin-bottom: 2px;
+      height: 16px;
       font-weight: bold;
       text-align: center;
+      line-height: 16px;
     }
 
-    /* 照合結果カード */
+    /* 照合結果カード（スキャン時に即座に大きく表示） */
     .result-card {
       width: 100%;
       background: var(--card-bg);
       border: 2px solid var(--border-color);
-      border-radius: 10px;
-      padding: 12px 16px;
-      margin-bottom: 8px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 4px;
       display: none;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-      animation: popIn 0.2s ease-out;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      animation: popIn 0.15s ease-out;
     }
     @keyframes popIn {
-      from { opacity: 0; transform: scale(0.96); }
+      from { opacity: 0; transform: scale(0.97); }
       to { opacity: 1; transform: scale(1); }
     }
     .result-card.success { border-color: var(--success-color); background: #f4fbf6; }
     .result-card.warning { border-color: var(--danger-color); background: #fdf2f2; }
 
-    .nickname-val { font-size: 20px; font-weight: bold; color: var(--primary-color); margin: 2px 0; text-align: center; }
-    .detail-val { font-size: 15px; color: var(--text-main); font-weight: bold; margin-bottom: 6px; text-align: center; }
+    .nickname-val { font-size: 18px; font-weight: bold; color: var(--primary-color); margin: 1px 0; text-align: center; }
+    .detail-val { font-size: 13px; color: var(--text-main); font-weight: bold; margin-bottom: 4px; text-align: center; }
 
-    .action-group { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .action-group { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
     
     .btn-confirm {
       width: 100%;
-      padding: 12px;
-      font-size: 17px;
+      padding: 10px;
+      font-size: 16px;
       font-weight: bold;
       color: white;
       background: var(--success-color);
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      transition: background 0.1s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
     .btn-confirm:active { background: #216e25; }
 
-    .sub-change-title { font-size: 11px; color: var(--text-sub); margin-top: 4px; margin-bottom: 2px; text-align: left; font-weight: bold; }
-    .shortcut-grid { display: flex; gap: 6px; }
+    .sub-change-title { font-size: 10px; color: var(--text-sub); margin-top: 2px; margin-bottom: 1px; text-align: left; font-weight: bold; }
+    .shortcut-grid { display: flex; gap: 4px; }
     
     .btn-short {
       flex: 1;
-      padding: 8px 0;
-      font-size: 13px;
+      padding: 6px 0;
+      font-size: 12px;
       font-weight: bold;
       background: #ffffff;
       border: 1px solid var(--primary-color);
       color: var(--primary-color);
-      border-radius: 6px;
+      border-radius: 4px;
       cursor: pointer;
     }
     .btn-short:active { background: var(--primary-color); color: white; }
 
-    /* テンキーコンテナ */
+    /* テンキーコンテナ（コンパクト化） */
     .bottom-keypad-container {
       width: 100%;
       background: var(--card-bg);
       border-top: 1px solid var(--border-color);
-      padding: 8px 16px 20px 16px;
-      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+      padding: 4px 12px 14px 12px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
     }
 
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 4px;
       max-width: 380px;
       margin: 0 auto;
     }
 
     .btn-key {
-      font-size: 22px;
+      font-size: 18px;
       font-weight: bold;
-      padding: 10px 0;
+      padding: 7px 0;
       background: #fdfbf7;
       border: 1px solid var(--border-color);
       color: var(--primary-color);
-      border-radius: 6px;
+      border-radius: 5px;
       cursor: pointer;
       transition: background 0.1s;
     }
     .btn-key:active { background: var(--accent-color); color: #ffffff; }
     
-    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 18px; }
-    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 18px; }
+    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 15px; }
+    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 15px; }
 
     /* トースト通知 */
     .toast-popup {
       position: fixed;
-      top: 35%;
+      top: 30%;
       left: 50%;
       transform: translate(-50%, -50%);
       background: rgba(139, 115, 85, 0.95);
       color: #ffffff;
-      padding: 16px 24px;
-      border-radius: 10px;
+      padding: 14px 20px;
+      border-radius: 8px;
       border: 1px solid var(--accent-color);
-      font-size: 17px;
+      font-size: 16px;
       font-weight: bold;
       text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
       z-index: 9999;
-      min-width: 260px;
-      line-height: 1.4;
+      min-width: 240px;
+      line-height: 1.3;
       animation: fadeIn 0.15s ease-out;
     }
 
@@ -272,15 +285,15 @@
 
 <div class="main-container">
   <div class="app-header">
-    <div class="admin-title">受付用 照合システム (QRリーダー)</div>
-    <div class="status-badge" id="cameraStatus">📷 カメラ起動中</div>
+    <div class="admin-title">受付照合システム (QRリーダー)</div>
+    <div class="status-badge" id="cameraStatus">📷 起動中...</div>
   </div>
 
-  <!-- 常時カメラ読み取り窓 -->
+  <!-- コンパクト常時カメラ読み取り窓 -->
   <div class="scanner-card">
     <div id="reader"></div>
     <div class="scanner-overlay-guide"></div>
-    <div class="scanner-hint">枠内にQRコードをかざしてください</div>
+    <div class="scanner-hint">枠内にQRをかざしてください</div>
   </div>
 
   <div id="display" class="display-box">-----</div>
@@ -288,7 +301,7 @@
 
   <!-- 照合結果表示カード -->
   <div id="resultCard" class="result-card">
-    <div id="cardStatus" style="font-size:12px; font-weight:bold; color:var(--text-sub); text-align:center;">【未受付】</div>
+    <div id="cardStatus" style="font-size:11px; font-weight:bold; color:var(--text-sub); text-align:center;">【未受付】</div>
     <div id="cardName" class="nickname-val">--- 様</div>
     <div id="cardDetail" class="detail-val">一般 / 1名</div>
     
@@ -306,7 +319,7 @@
 </div>
 
 <!-- テンキー手入力エリア -->
-<div class="bottom-keypad-container">
+<div class="bottom-keypad-container" id="keypadContainer">
   <div class="keypad">
     <button class="btn-key" onclick="pressKey('1')">1</button>
     <button class="btn-key" onclick="pressKey('2')">2</button>
@@ -540,8 +553,8 @@
     const html5QrCode = new Html5Qrcode("reader");
     const config = {
       fps: 15,
-      qrbox: { width: 150, height: 150 },
-      aspectRatio: 1.33
+      qrbox: { width: 220, height: 100 },
+      aspectRatio: 1.777778
     };
 
     html5QrCode.start(
