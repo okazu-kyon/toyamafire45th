@@ -82,7 +82,7 @@
       cursor: pointer;
     }
 
-    /* カメラプレビュー窓（少し高さを抑えて中間バランスに） */
+    /* カメラプレビュー窓 */
     .scanner-card {
       width: 100%;
       flex: 1;
@@ -166,7 +166,7 @@
       flex-shrink: 0;
     }
 
-    /* 下部固定テンキー（中間サイズに拡大） */
+    /* 下部固定テンキー */
     .bottom-keypad-container {
       width: 100%;
       max-width: 440px;
@@ -182,15 +182,15 @@
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px; /* 隙間も少し広げる */
+      gap: 6px;
       max-width: 380px;
       margin: 0 auto;
     }
 
     .btn-key {
-      font-size: 22px; /* 文字を少し大きく */
+      font-size: 22px;
       font-weight: bold;
-      padding: 11px 0; /* 高さを出して押しやすく */
+      padding: 11px 0;
       background: #fdfbf7;
       border: 1px solid var(--border-color);
       color: var(--primary-color);
@@ -261,7 +261,7 @@
   <div id="statusMsg" class="status-msg">QRをかざすか5桁を入力してください</div>
 </div>
 
-<!-- 下部固定テンキー（中間サイズ） -->
+<!-- 下部固定テンキー -->
 <div class="bottom-keypad-container">
   <div class="keypad">
     <button class="btn-key" data-num="1">1</button>
@@ -593,7 +593,6 @@
     const statusBadge = document.getElementById('cameraStatus');
     statusBadge.innerText = "🔄 カメラ再起動中...";
     
-    ,
     if (html5QrCode) {
       html5QrCode.stop().then(function() {
         isCameraRunning = false;
