@@ -82,7 +82,7 @@
       cursor: pointer;
     }
 
-    /* カメラプレビュー窓 */
+    /* カメラプレビュー窓（少し高さを抑えて中間バランスに） */
     .scanner-card {
       width: 100%;
       flex: 1;
@@ -93,7 +93,7 @@
       position: relative;
       border: 2px solid var(--border-color);
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      min-height: 160px;
+      min-height: 130px;
     }
 
     #reader {
@@ -115,8 +115,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 140px;
-      height: 140px;
+      width: 120px;
+      height: 120px;
       border: 2px dashed rgba(255,255,255,0.9);
       border-radius: 12px;
       pointer-events: none;
@@ -166,7 +166,7 @@
       flex-shrink: 0;
     }
 
-    /* 下部固定テンキー */
+    /* 下部固定テンキー（中間サイズに拡大） */
     .bottom-keypad-container {
       width: 100%;
       max-width: 440px;
@@ -174,7 +174,7 @@
       background: var(--card-bg);
       border-top: 1px solid var(--border-color);
       border-radius: 12px 12px 0 0;
-      padding: 6px 12px 10px 12px;
+      padding: 6px 12px 12px 12px;
       box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.06);
       flex-shrink: 0;
     }
@@ -182,30 +182,28 @@
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
+      gap: 6px; /* 隙間も少し広げる */
       max-width: 380px;
       margin: 0 auto;
     }
 
     .btn-key {
-      font-size: 19px;
+      font-size: 22px; /* 文字を少し大きく */
       font-weight: bold;
-      padding: 6px 0;
+      padding: 11px 0; /* 高さを出して押しやすく */
       background: #fdfbf7;
       border: 1px solid var(--border-color);
       color: var(--primary-color);
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      /* スマホでのタッチ遅延を完全になくして即座に反応させる */
       touch-action: manipulation;
     }
-    /* タッチした瞬間に確実に色を変え、指を離す時のタイムラグを排除 */
     .btn-key:active, .btn-key.touch-active { 
       background: var(--accent-color) !important; 
       color: #ffffff !important; 
     }
-    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 15px; }
-    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 15px; }
+    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 17px; }
+    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 17px; }
 
     /* ポップアップおよびその他スタイル */
     .modal-overlay {
@@ -263,7 +261,7 @@
   <div id="statusMsg" class="status-msg">QRをかざすか5桁を入力してください</div>
 </div>
 
-<!-- 下部固定テンキー -->
+<!-- 下部固定テンキー（中間サイズ） -->
 <div class="bottom-keypad-container">
   <div class="keypad">
     <button class="btn-key" data-num="1">1</button>
@@ -556,7 +554,7 @@
     html5QrCode = new Html5Qrcode("reader");
     const config = {
       fps: 15,
-      qrbox: { width: 140, height: 140 },
+      qrbox: { width: 120, height: 120 },
       aspectRatio: 1.0
     };
 
@@ -595,6 +593,7 @@
     const statusBadge = document.getElementById('cameraStatus');
     statusBadge.innerText = "🔄 カメラ再起動中...";
     
+    ,
     if (html5QrCode) {
       html5QrCode.stop().then(function() {
         isCameraRunning = false;
@@ -622,15 +621,13 @@
     return null;
   }
 
-  // ★スマホの「touchstart」イベントを直接拾って、指が触れた瞬間に超高速で反応させる処理
   window.addEventListener('DOMContentLoaded', function() {
     initCameraScanner();
 
     const keypadButtons = document.querySelectorAll('.btn-key');
     keypadButtons.forEach(button => {
-      // タッチ開始の瞬間に反応（clickイベントの300ms遅延を完全に回避）
       button.addEventListener('touchstart', function(e) {
-        e.preventDefault(); // 画面のズームやスクロールなどの余計な挙動をブロック
+        e.preventDefault();
         button.classList.add('touch-active');
         
         const num = button.getAttribute('data-num');
@@ -645,7 +642,6 @@
         }
       }, { passive: false });
 
-      // 指を離したとき（または外側にズレたとき）にアクティブ表示を戻す
       button.addEventListener('touchend', function(e) {
         e.preventDefault();
         button.classList.remove('touch-active');
@@ -655,7 +651,6 @@
         button.classList.remove('touch-active');
       });
 
-      // PCのマウス操作でも動くように通常のクリックも併用
       button.addEventListener('click', function() {
         const num = button.getAttribute('data-num');
         const action = button.getAttribute('data-action');
