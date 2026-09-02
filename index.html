@@ -5,7 +5,7 @@
   <base target="_top">
   <title>受付用 QR照合システム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- QRスキャナーライブラリ (安定動作設定) -->
+  <!-- QRスキャナーライブラリ -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     :root {
@@ -44,17 +44,15 @@
       justify-content: space-between;
     }
 
-    /* 上部エリア（カメラ＋ディスプレイ）: スクロールなしで画面上部いっぱいに配置 */
+    /* 上部エリア */
     .top-section {
       width: 100%;
       max-width: 440px;
       margin: 0 auto;
-      padding: 8px 12px 0 12px;
+      padding: 6px 12px 0 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      flex: 1;
-      overflow: hidden;
     }
 
     .app-header {
@@ -62,11 +60,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .admin-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
       color: var(--accent-color);
       letter-spacing: 1px;
@@ -82,19 +80,17 @@
       cursor: pointer;
     }
 
-    /* カメラプレビュー窓（上部の余白をフル活用） */
+    /* カメラプレビュー窓（高さを固定し安定化） */
     .scanner-card {
       width: 100%;
-      flex: 1;
-      min-height: 160px;
-      max-height: 250px;
+      height: 200px; /* 固定高さに変更してライブラリの暴走を防ぐ */
       background: #1a1a1a;
       border-radius: 10px;
       overflow: hidden;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       position: relative;
       border: 2px solid var(--border-color);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     #reader {
@@ -113,8 +109,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 140px;
-      height: 140px;
+      width: 130px;
+      height: 130px;
       border: 2px dashed rgba(255,255,255,0.85);
       border-radius: 12px;
       pointer-events: none;
@@ -123,12 +119,12 @@
 
     .scanner-hint {
       position: absolute;
-      bottom: 6px;
+      bottom: 4px;
       left: 0;
       right: 0;
       text-align: center;
       color: #ffffff;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
       text-shadow: 0 1px 3px rgba(0,0,0,0.9);
       pointer-events: none;
@@ -137,14 +133,14 @@
     /* ディスプレイ表示 */
     .display-box {
       width: 100%;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: bold;
       letter-spacing: 6px;
-      padding: 4px 12px;
+      padding: 2px 12px;
       background: var(--card-bg);
       border-radius: 8px;
-      margin-bottom: 4px;
-      height: 44px;
+      margin-bottom: 2px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -154,13 +150,13 @@
     }
 
     .status-msg {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-sub);
-      margin-bottom: 4px;
-      height: 16px;
+      margin-bottom: 2px;
+      height: 14px;
       font-weight: bold;
       text-align: center;
-      line-height: 16px;
+      line-height: 14px;
     }
 
     /* 下部固定テンキー */
@@ -168,22 +164,22 @@
       width: 100%;
       background: var(--card-bg);
       border-top: 1px solid var(--border-color);
-      padding: 6px 14px 18px 14px;
+      padding: 6px 14px 14px 14px;
       box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.04);
     }
 
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 5px;
       max-width: 380px;
       margin: 0 auto;
     }
 
     .btn-key {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: bold;
-      padding: 9px 0;
+      padding: 8px 0;
       background: #fdfbf7;
       border: 1px solid var(--border-color);
       color: var(--primary-color);
@@ -192,12 +188,10 @@
       transition: background 0.1s;
     }
     .btn-key:active { background: var(--accent-color); color: #ffffff; }
-    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 18px; }
-    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 18px; }
+    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 16px; }
+    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 16px; }
 
-    /* ==================================== */
-    /* 照合結果ポップアップシート (画面下からスッと出現) */
-    /* ==================================== */
+    /* ポップアップシート */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -248,7 +242,7 @@
 
     .btn-confirm-large {
       width: 100%;
-      padding: 15px;
+      padding: 14px;
       font-size: 18px;
       font-weight: bold;
       color: white;
@@ -258,7 +252,6 @@
       cursor: pointer;
       box-shadow: 0 3px 10px rgba(46, 125, 50, 0.3);
       margin-bottom: 10px;
-      transition: background 0.1s;
     }
     .btn-confirm-large:active { background: #216e25; }
 
@@ -287,9 +280,7 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    .btn-short:active { background: var(--primary-color); color: white; }
 
-    /* トースト通知 */
     .toast-popup {
       position: fixed;
       top: 35%;
@@ -306,31 +297,23 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.25);
       z-index: 2000;
       min-width: 250px;
-      line-height: 1.4;
-      animation: popIn 0.15s ease-out;
-    }
-    @keyframes popIn {
-      from { opacity: 0; transform: translate(-50%, -40%); }
-      to { opacity: 1; transform: translate(-50%, -50%); }
     }
 
     .loading-locked {
       pointer-events: none !important;
       opacity: 0.5;
-      transition: opacity 0.2s ease;
     }
   </style>
 </head>
 <body>
 
-<!-- 上部固定エリア（カメラ窓＋ディスプレイ） -->
 <div class="top-section">
   <div class="app-header">
     <div class="admin-title">受付用 照合システム (QRリーダー)</div>
     <div class="status-badge" id="cameraStatus" onclick="restartCamera()" title="タップしてカメラを再起動">📷 カメラ起動中</div>
   </div>
 
-  <!-- 常時カメラ読み取り窓（スクロール不要・画面上部をフル活用） -->
+  <!-- カメラプレビュー窓（高さを固定し安定化） -->
   <div class="scanner-card">
     <div id="reader"></div>
     <div class="scanner-overlay-guide"></div>
@@ -341,7 +324,6 @@
   <div id="statusMsg" class="status-msg">QRをかざすか5桁を入力してください</div>
 </div>
 
-<!-- 下部固定テンキー -->
 <div class="bottom-keypad-container">
   <div class="keypad">
     <button class="btn-key" onclick="pressKey('1')">1</button>
@@ -359,7 +341,6 @@
   </div>
 </div>
 
-<!-- 照合結果ポップアップシート（読み取り時に出現、確定後自動で閉じる） -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-sheet">
     <div id="modalBadge" class="modal-badge" style="color:var(--success-color);">【未受付】</div>
@@ -392,7 +373,6 @@
   let html5QrCode = null;
   let isCameraRunning = false;
 
-  // JSONPでGAS APIを呼び出す関数（CORS制約を完全回避）
   function callGasApi(params, callbackSuccess, callbackFailure) {
     const callbackName = 'gasCallback_' + Math.floor(Math.random() * 1000000);
     params.callback = callbackName;
@@ -587,20 +567,16 @@
     }, duration);
   }
 
-  // ============================
-  // 常時QRコードスキャナー初期化・再起動制御
-  // ============================
   function initCameraScanner() {
     if (isCameraRunning) return;
     
     document.getElementById('cameraStatus').innerText = "📷 カメラ起動中...";
     document.getElementById('cameraStatus').style.background = "#e8e0d0";
-    document.getElementById('cameraStatus').style.color = "var(--text-main)";
 
     html5QrCode = new Html5Qrcode("reader");
     const config = {
       fps: 15,
-      qrbox: { width: 150, height: 150 },
+      qrbox: { width: 140, height: 140 },
       aspectRatio: 1.33
     };
 
@@ -610,6 +586,7 @@
       function onScanSuccess(decodedText) {
         const code = extractCode(decodedText);
         if (code && code !== lastScannedCode && !isLoading) {
+          lastScentral = code;
           lastScannedCode = code;
           inputCode = code;
           updateDisplay();
@@ -620,12 +597,10 @@
           }, 3000);
         }
       },
-      function onScanFailure() {
-        // スキャン継続
-      }
+      function onScanFailure() {}
     ).then(function() {
       isCameraRunning = true;
-      document.getElementById('cameraStatus').innerText = "🟢 カメラ稼働中 (再起動)";
+      document.getElementById('cameraStatus').innerText = "🟢 カメラ稼働中";
       document.getElementById('cameraStatus').style.background = "#e6f4ea";
       document.getElementById('cameraStatus').style.color = "#137333";
     }).catch(function(err) {
@@ -645,7 +620,7 @@
         isCameraRunning = false;
         html5QrCode.clear();
         setTimeout(initCameraScanner, 300);
-      }).catch(function(err) {
+      }).catch(function() {
         isCameraRunning = false;
         setTimeout(initCameraScanner, 300);
       });
