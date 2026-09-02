@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <base target="_top">
   <title>受付用 QR照合システム</title>
-  <!-- ピンチイン・ダブルタップによる拡大を厳格に禁止するviewport設定 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- QRスキャナーライブラリ -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     :root {
@@ -198,8 +196,14 @@
       color: var(--primary-color);
       border-radius: 6px;
       cursor: pointer;
+      /* スマホでのタッチ遅延を完全になくして即座に反応させる */
+      touch-action: manipulation;
     }
-    .btn-key:active { background: var(--accent-color); color: #ffffff; }
+    /* タッチした瞬間に確実に色を変え、指を離す時のタイムラグを排除 */
+    .btn-key:active, .btn-key.touch-active { 
+      background: var(--accent-color) !important; 
+      color: #ffffff !important; 
+    }
     .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 15px; }
     .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 15px; }
 
@@ -262,18 +266,18 @@
 <!-- 下部固定テンキー -->
 <div class="bottom-keypad-container">
   <div class="keypad">
-    <button class="btn-key" onclick="pressKey('1')">1</button>
-    <button class="btn-key" onclick="pressKey('2')">2</button>
-    <button class="btn-key" onclick="pressKey('3')">3</button>
-    <button class="btn-key" onclick="pressKey('4')">4</button>
-    <button class="btn-key" onclick="pressKey('5')">5</button>
-    <button class="btn-key" onclick="pressKey('6')">6</button>
-    <button class="btn-key" onclick="pressKey('7')">7</button>
-    <button class="btn-key" onclick="pressKey('8')">8</button>
-    <button class="btn-key" onclick="pressKey('9')">9</button>
-    <button class="btn-key btn-clear" onclick="clearKey()">C</button>
-    <button class="btn-key" onclick="pressKey('0')">0</button>
-    <button class="btn-key btn-bs" onclick="backspaceKey()">⌫</button>
+    <button class="btn-key" data-num="1">1</button>
+    <button class="btn-key" data-num="2">2</button>
+    <button class="btn-key" data-num="3">3</button>
+    <button class="btn-key" data-num="4">4</button>
+    <button class="btn-key" data-num="5">5</button>
+    <button class="btn-key" data-num="6">6</button>
+    <button class="btn-key" data-num="7">7</button>
+    <button class="btn-key" data-num="8">8</button>
+    <button class="btn-key" data-num="9">9</button>
+    <button class="btn-key btn-clear" data-action="clear">C</button>
+    <button class="btn-key" data-num="0">0</button>
+    <button class="btn-key btn-bs" data-action="bs">⌫</button>
   </div>
 </div>
 
@@ -309,7 +313,6 @@
   let html5QrCode = null;
   let isCameraRunning = false;
 
-  // iOSなどのダブルタップ拡大を防ぐためのタッチガード処理
   let lastTouchEnd = 0;
   document.addEventListener('touchend', function(event) {
     const now = (new Date()).getTime();
@@ -319,7 +322,6 @@
     lastTouchEnd = now;
   }, { passive: false });
 
-  // 読み取り成功時の「ピピッ」と軽快に鳴る電子音（Web Audio API）
   function playBeepSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -327,11 +329,10 @@
         audioCtx.resume();
       }
       
-      // 1回目の「ピッ」
       const osc1 = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
       osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(1760, audioCtx.currentTime); // 高めの心地よい音 (A6)
+      osc1.frequency.setValueAtTime(1760, audioCtx.currentTime);
       gain1.gain.setValueAtTime(0.15, audioCtx.currentTime);
       gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
       osc1.connect(gain1);
@@ -339,20 +340,17 @@
       osc1.start();
       osc1.stop(audioCtx.currentTime + 0.08);
 
-      // 2回目の「ッ」（少し間隔を空けて「ピピッ」感を作る）
       const osc2 = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
       osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(2637, audioCtx.currentTime + 0.09); // さらに高音 (E7)
+      osc2.frequency.setValueAtTime(2637, audioCtx.currentTime + 0.09);
       gain2.gain.setValueAtTime(0.15, audioCtx.currentTime + 0.09);
       gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
       osc2.connect(gain2);
       gain2.connect(audioCtx.destination);
       osc2.start(audioCtx.currentTime + 0.09);
       osc2.stop(audioCtx.currentTime + 0.18);
-    } catch (e) {
-      // 音声再生がブロックされている環境などではエラーを出さずにスルー
-    }
+    } catch (e) {}
   }
 
   function callGasApi(params, callbackSuccess, callbackFailure) {
@@ -569,10 +567,7 @@
         const code = extractCode(decodedText);
         if (code && code !== lastScannedCode && !isLoading) {
           lastScannedCode = code;
-          
-          // ★ここで「ピピッ」と音を鳴らす
           playBeepSound();
-
           inputCode = code;
           updateDisplay();
 
@@ -594,10 +589,6 @@
       document.getElementById('cameraStatus').style.background = "#fce8e6";
       document.getElementById('cameraStatus').style.color = "#c5221f";
     });
-  }
-
-  function restartCardScanner() {
-    restartCamera();
   }
 
   function restartCamera() {
@@ -631,8 +622,53 @@
     return null;
   }
 
+  // ★スマホの「touchstart」イベントを直接拾って、指が触れた瞬間に超高速で反応させる処理
   window.addEventListener('DOMContentLoaded', function() {
     initCameraScanner();
+
+    const keypadButtons = document.querySelectorAll('.btn-key');
+    keypadButtons.forEach(button => {
+      // タッチ開始の瞬間に反応（clickイベントの300ms遅延を完全に回避）
+      button.addEventListener('touchstart', function(e) {
+        e.preventDefault(); // 画面のズームやスクロールなどの余計な挙動をブロック
+        button.classList.add('touch-active');
+        
+        const num = button.getAttribute('data-num');
+        const action = button.getAttribute('data-action');
+        
+        if (num !== null) {
+          pressKey(num);
+        } else if (action === 'clear') {
+          clearKey();
+        } else if (action === 'bs') {
+          backspaceKey();
+        }
+      }, { passive: false });
+
+      // 指を離したとき（または外側にズレたとき）にアクティブ表示を戻す
+      button.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        button.classList.remove('touch-active');
+      }, { passive: false });
+
+      button.addEventListener('touchcancel', function(e) {
+        button.classList.remove('touch-active');
+      });
+
+      // PCのマウス操作でも動くように通常のクリックも併用
+      button.addEventListener('click', function() {
+        const num = button.getAttribute('data-num');
+        const action = button.getAttribute('data-action');
+        
+        if (num !== null) {
+          pressKey(num);
+        } else if (action === 'clear') {
+          clearKey();
+        } else if (action === 'bs') {
+          backspaceKey();
+        }
+      });
+    });
   });
 </script>
 
