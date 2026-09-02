@@ -27,7 +27,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", sans-serif;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-      /* タッチ操作によるブラウザ側のデフォルト拡大・ズーム挙動を抑制 */
       touch-action: manipulation;
     }
 
@@ -315,10 +314,46 @@
   document.addEventListener('touchend', function(event) {
     const now = (new Date()).getTime();
     if (now - lastTouchEnd <= 300) {
-      event.preventDefault(); // 300ms以内の連続タップ（ダブルタップ）による拡大をキャンセル
+      event.preventDefault();
     }
     lastTouchEnd = now;
   }, { passive: false });
+
+  // 読み取り成功時の「ピピッ」と軽快に鳴る電子音（Web Audio API）
+  function playBeepSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      
+      // 1回目の「ピッ」
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(1760, audioCtx.currentTime); // 高めの心地よい音 (A6)
+      gain1.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start();
+      osc1.stop(audioCtx.currentTime + 0.08);
+
+      // 2回目の「ッ」（少し間隔を空けて「ピピッ」感を作る）
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(2637, audioCtx.currentTime + 0.09); // さらに高音 (E7)
+      gain2.gain.setValueAtTime(0.15, audioCtx.currentTime + 0.09);
+      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(audioCtx.currentTime + 0.09);
+      osc2.stop(audioCtx.currentTime + 0.18);
+    } catch (e) {
+      // 音声再生がブロックされている環境などではエラーを出さずにスルー
+    }
+  }
 
   function callGasApi(params, callbackSuccess, callbackFailure) {
     const callbackName = 'gasCallback_' + Math.floor(Math.random() * 1000000);
@@ -534,6 +569,10 @@
         const code = extractCode(decodedText);
         if (code && code !== lastScannedCode && !isLoading) {
           lastScannedCode = code;
+          
+          // ★ここで「ピピッ」と音を鳴らす
+          playBeepSound();
+
           inputCode = code;
           updateDisplay();
 
@@ -557,6 +596,10 @@
     });
   }
 
+  function restartCardScanner() {
+    restartCamera();
+  }
+
   function restartCamera() {
     const statusBadge = document.getElementById('cameraStatus');
     statusBadge.innerText = "🔄 カメラ再起動中...";
@@ -567,7 +610,7 @@
         html5QrCode.clear();
         setTimeout(initCameraScanner, 300);
       }).catch(function() {
-        isCameraRunning, isCameraRunning = false;
+        isCameraRunning = false;
         setTimeout(initCameraScanner, 300);
       });
     } else {
