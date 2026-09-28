@@ -220,7 +220,7 @@
   <div class="admin-title">受付QR照合</div>
   <div class="header-actions">
     <label class="smooth-mode-label">
-      <input type="checkbox" id="chkSmoothMode" onchange="toggleSmoothMode()"> スムーズ
+      <input type="checkbox" id="chkSmoothMode" checked onchange="toggleSmoothMode()"> スムーズ
     </label>
     <div class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 インカメラ</div>
     <div class="status-badge" id="cameraStatus" onclick="restartCamera()" title="タップしてカメラを再起動">📷 起動中</div>
@@ -265,7 +265,7 @@
   let html5QrCode = null;
   let isCameraRunning = false;
   let currentFacingMode = "user";
-  let isSmoothMode = false;
+  let isSmoothMode = true;
   let toastTimer = null;
 
   let lastTouchEnd = 0;
