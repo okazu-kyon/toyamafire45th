@@ -72,10 +72,27 @@
       letter-spacing: 1px;
     }
 
+    .header-actions {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
     .status-badge {
       font-size: 11px;
       background: #e8e0d0;
       color: var(--text-main);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-switch-camera {
+      font-size: 11px;
+      background: #ffffff;
+      color: var(--primary-color);
+      border: 1px solid var(--border-color);
       padding: 2px 8px;
       border-radius: 12px;
       font-weight: bold;
@@ -247,7 +264,10 @@
 <div class="top-section">
   <div class="app-header">
     <div class="admin-title">受付用 照合システム (QRリーダー)</div>
-    <div class="status-badge" id="cameraStatus" onclick="restartCamera()" title="タップしてカメラを再起動">📷 カメラ起動中</div>
+    <div class="header-actions">
+      <div class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 インカメラ</div>
+      <div class="status-badge" id="cameraStatus" onclick="restartCamera()" title="タップしてカメラを再起動">📷 カメラ起動中</div>
+    </div>
   </div>
 
   <!-- カメラプレビュー窓 -->
@@ -310,6 +330,7 @@
   let scanCooldownTimer = null;
   let html5QrCode = null;
   let isCameraRunning = false;
+  let currentFacingMode = "user"; // デフォルトをインカメラ（"user"）に設定。アウトカメラにするなら "environment"
 
   let lastTouchEnd = 0;
   document.addEventListener('touchend', function(event) {
@@ -545,6 +566,21 @@
     }, duration);
   }
 
+  function updateCameraSwitchBtnText() {
+    const btn = document.getElementById('btnSwitchCamera');
+    if (currentFacingMode === "user") {
+      btn.innerText = "🔄 アウトカメラへ";
+    } else {
+      btn.innerText = "🔄 インカメラへ";
+    }
+  }
+
+  function toggleCameraFacing() {
+    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+    updateCameraSwitchBtnText();
+    restartCamera();
+  }
+
   function initCameraScanner() {
     if (isCameraRunning) return;
     
@@ -559,11 +595,16 @@
     };
 
     html5QrCode.start(
-      { facingMode: "environment" },
+      { facingMode: currentFacingMode },
       config,
       function onScanSuccess(decodedText) {
+        // モーダルが開いている場合や処理中の場合は追加スキャンをガード
+        const modal = document.getElementById('resultModal');
+        if (modal && modal.style.display === 'flex') return;
+        if (isLoading) return;
+
         const code = extractCode(decodedText);
-        if (code && code !== lastScannedCode && !isLoading) {
+        if (code && code !== lastScannedCode) {
           lastScannedCode = code;
           playBeepSound();
           inputCode = code;
@@ -621,6 +662,7 @@
   }
 
   window.addEventListener('DOMContentLoaded', function() {
+    updateCameraSwitchBtnText();
     initCameraScanner();
 
     const keypadButtons = document.querySelectorAll('.btn-key');
