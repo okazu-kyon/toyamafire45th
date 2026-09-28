@@ -624,10 +624,17 @@
     document.getElementById('cameraStatus').style.background = "#e8e0d0";
 
     html5QrCode = new Html5Qrcode("reader");
+    // カメラの表示領域（要素）のサイズを取得してスキャン枠を動的に最適化
+    const scannerCard = document.querySelector('.scanner-card');
+    const boxSize = scannerCard ? Math.floor(Math.min(scannerCard.clientWidth, scannerCard.clientHeight) * 0.8) : 200;
+    
     const config = {
-      fps: 15,
-      qrbox: { width: 150, height: 150 },
-      aspectRatio: 1.0
+      fps: 30, // 15から30に上げて判定頻度を倍増
+      qrbox: { width: boxSize, height: boxSize }, // スキャン認識エリアを枠いっぱいに拡大
+      aspectRatio: 1.0,
+      experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true // ブラウザネイティブの高速QRデコーダーを優先使用
+      }
     };
 
     html5QrCode.start(
