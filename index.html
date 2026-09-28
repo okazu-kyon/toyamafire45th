@@ -620,6 +620,11 @@
       function onScanFailure() {}
     ).then(function() {
       isCameraRunning = true;
+
+      // ★追加：カメラ映像要素（video）を確実に左右反転（鏡像）にする
+      const videoElem = document.querySelector('#reader video');
+      if (videoElem) videoElem.style.setProperty('transform', 'scaleX(-1)', 'important');
+      
       document.getElementById('cameraStatus').innerText = "🟢 カメラ稼働中";
       document.getElementById('cameraStatus').style.background = "#e6f4ea";
       document.getElementById('cameraStatus').style.color = "#137333";
