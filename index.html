@@ -43,7 +43,6 @@
       justify-content: space-between;
     }
 
-    /* 上部エリア：カメラとディスプレイを配置 */
     .top-section {
       width: 100%;
       max-width: 440px;
@@ -113,7 +112,6 @@
       cursor: pointer;
     }
 
-    /* カメラプレビュー窓 */
     .scanner-card {
       width: 100%;
       flex: 1;
@@ -167,7 +165,6 @@
       pointer-events: none;
     }
 
-    /* ディスプレイ表示 */
     .display-box {
       width: 100%;
       font-size: 24px;
@@ -197,7 +194,6 @@
       flex-shrink: 0;
     }
 
-    /* 下部固定テンキー */
     .bottom-keypad-container {
       width: 100%;
       max-width: 440px;
@@ -236,7 +232,6 @@
     .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 17px; }
     .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 17px; }
 
-    /* ポップアップおよびその他スタイル */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -264,11 +259,16 @@
     .sub-change-title { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; font-weight: bold; }
     .shortcut-grid { display: flex; gap: 6px; margin-bottom: 10px; }
     .btn-short { flex: 1; padding: 8px 0; font-size: 13px; font-weight: bold; background: #ffffff; border: 1.5px solid var(--primary-color); color: var(--primary-color); border-radius: 6px; cursor: pointer; }
+    
     .toast-popup {
       position: fixed; top: 35%; left: 50%; transform: translate(-50%, -50%);
       background: rgba(139, 115, 85, 0.96); color: #ffffff; padding: 16px 24px;
       border-radius: 10px; border: 1px solid var(--accent-color); font-size: 17px;
-      font-weight: bold; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.25); z-index: 2000; min-width: 250px;
+      font-weight: bold; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.25); z-index: 2000; min-width: 260px;
+    }
+    .toast-warning {
+      background: rgba(180, 40, 40, 0.96) !important;
+      border-color: #ff8888 !important;
     }
     .loading-locked { pointer-events: none !important; opacity: 0.5; }
   </style>
@@ -287,7 +287,6 @@
     </div>
   </div>
 
-  <!-- カメラプレビュー窓 -->
   <div class="scanner-card">
     <div id="reader"></div>
     <div class="scanner-overlay-guide"></div>
@@ -298,7 +297,6 @@
   <div id="statusMsg" class="status-msg">QRをかざすか5桁を入力してください</div>
 </div>
 
-<!-- 下部固定テンキー -->
 <div class="bottom-keypad-container">
   <div class="keypad">
     <button class="btn-key" data-num="1">1</button>
@@ -362,7 +360,7 @@
   function toggleSmoothMode() {
     isSmoothMode = document.getElementById('chkSmoothMode').checked;
     if (isSmoothMode) {
-      showAutoToast("⚡ スムーズ受付モード ON", 1200);
+      showAutoToast("⚡ 爆速スムーズモード ON", 1200);
     }
   }
 
@@ -445,7 +443,6 @@
   }
 
   function pressKey(num) {
-    if (isLoading) return;
     if (inputCode.length < 5) {
       inputCode += num;
       updateDisplay();
@@ -453,7 +450,6 @@
   }
 
   function clearKey() {
-    if (isLoading) return;
     inputCode = "";
     currentData = null;
     document.getElementById('statusMsg').innerText = "QRをかざすか5桁を入力してください";
@@ -462,7 +458,6 @@
   }
 
   function backspaceKey() {
-    if (isLoading) return;
     if (inputCode.length > 0) {
       inputCode = inputCode.slice(0, -1);
       document.getElementById('statusMsg').innerText = "QRをかざすか5桁を入力してください";
@@ -472,24 +467,44 @@
   }
 
   function searchCode() {
-    if (isLoading) return;
-    setLock(true);
-    document.getElementById('statusMsg').innerText = "照会中...";
-    document.getElementById('statusMsg').style.color = "var(--primary-color)";
+    const targetCode = inputCode;
+    
+    // 通常モードの場合のみ画面入力画面をロック
+    if (!isSmoothMode) {
+      setLock(true);
+      document.getElementById('statusMsg').innerText = "照会中...";
+      document.getElementById('statusMsg').style.color = "var(--primary-color)";
+    } else {
+      document.getElementById('statusMsg').innerText = "⚡ 通信照会中...";
+      document.getElementById('statusMsg').style.color = "var(--primary-color)";
+      // スムーズモード時はディスプレイ入力表示を即クリアして次の読み取りへ備える
+      setTimeout(function() {
+        if (inputCode === targetCode) {
+          inputCode = "";
+          updateDisplay();
+        }
+      }, 300);
+    }
 
+    // バックグラウンドで照会実行
     callGasApi(
-      { action: 'search', code: inputCode },
+      { action: 'search', code: targetCode },
       function(res) {
-        setLock(false);
+        if (!isSmoothMode) setLock(false);
+
         if (res && res.success) {
           currentData = res;
 
-          // ★スムーズ受付モード処理
+          // ★スムーズ受付モードの爆速分岐
           if (isSmoothMode) {
             if (res.status === "未受付") {
-              confirmCheckIn(res.count);
-            } else {
-              openResultModal(res); // 受付済またはキャンセルの場合は警告ポップアップ表示
+              // 自動即時受付をバックグラウンド実行
+              confirmCheckInAuto(res);
+            } else if (res.status === "受付済") {
+              // 受付完了済みの場合も画面を止めずに警告トースト表示のみで流す
+              showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（すでに受付完了済みです）", 1500, true);
+            } else if (res.status === "キャンセル") {
+              showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 1500, true);
             }
           } else {
             openResultModal(res);
@@ -498,14 +513,33 @@
           }
 
         } else {
-          document.getElementById('statusMsg').innerText = (res && res.message) ? res.message : "該当する受付番号が存在しません";
-          document.getElementById('statusMsg').style.color = "var(--danger-color)";
+          if (isSmoothMode) {
+            showAutoToast("⚠️ 番号: " + targetCode + "<br>該当データがありません", 1500, true);
+          } else {
+            document.getElementById('statusMsg').innerText = (res && res.message) ? res.message : "該当する受付番号が存在しません";
+            document.getElementById('statusMsg').style.color = "var(--danger-color)";
+          }
         }
       },
       function(err) {
-        setLock(false);
-        document.getElementById('statusMsg').innerText = "通信エラーが発生しました";
-        document.getElementById('statusMsg').style.color = "var(--danger-color)";
+        if (!isSmoothMode) setLock(false);
+        showAutoToast("⚠️ 通信エラーが発生しました", 1500, true);
+      }
+    );
+  }
+
+  function confirmCheckInAuto(data) {
+    callGasApi(
+      { action: 'checkin', code: data.code, count: data.count },
+      function(res) {
+        if (res && res.success) {
+          showAutoToast("✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！", 1200);
+        } else {
+          showAutoToast("❌ 受付失敗: " + ((res && res.message) || ""), 1500, true);
+        }
+      },
+      function(err) {
+        showAutoToast("❌ 通信エラー", 1500, true);
       }
     );
   }
@@ -570,7 +604,7 @@
         setLock(false);
         if (res && res.success) {
           closeResultModal();
-          showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", isSmoothMode ? 1200 : 2000);
+          showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 1500);
           clearKey();
         } else {
           alert("エラー: " + ((res && res.message) || "受付処理に失敗しました"));
@@ -583,13 +617,13 @@
     );
   }
 
-  function showAutoToast(msg, duration) {
+  function showAutoToast(msg, duration, isWarning) {
     const oldToast = document.getElementById('autoToast');
     if (oldToast) oldToast.remove();
 
     const toast = document.createElement('div');
     toast.id = 'autoToast';
-    toast.className = 'toast-popup';
+    toast.className = 'toast-popup' + (isWarning ? ' toast-warning' : '');
     toast.innerHTML = msg;
     document.body.appendChild(toast);
 
@@ -623,17 +657,16 @@
     document.getElementById('cameraStatus').innerText = "📷 カメラ起動中...";
     document.getElementById('cameraStatus').style.background = "#e8e0d0";
 
-    html5QrCode = new Html5Qrcode("reader");
-    // カメラの表示領域（要素）のサイズを取得してスキャン枠を動的に最適化
     const scannerCard = document.querySelector('.scanner-card');
     const boxSize = scannerCard ? Math.floor(Math.min(scannerCard.clientWidth, scannerCard.clientHeight) * 0.8) : 200;
-    
+
+    html5QrCode = new Html5Qrcode("reader");
     const config = {
-      fps: 30, // 15から30に上げて判定頻度を倍増
-      qrbox: { width: boxSize, height: boxSize }, // スキャン認識エリアを枠いっぱいに拡大
+      fps: 30,
+      qrbox: { width: boxSize, height: boxSize },
       aspectRatio: 1.0,
       experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true // ブラウザネイティブの高速QRデコーダーを優先使用
+        useBarCodeDetectorIfSupported: true
       }
     };
 
@@ -641,9 +674,10 @@
       { facingMode: currentFacingMode },
       config,
       function onScanSuccess(decodedText) {
-        const modal = document.getElementById('resultModal');
-        if (modal && modal.style.display === 'flex') return;
-        if (isLoading) return;
+        if (!isSmoothMode) {
+          const modal = document.getElementById('resultModal');
+          if (modal && modal.style.display === 'flex') return;
+        }
 
         const code = extractCode(decodedText);
         if (code && code !== lastScannedCode) {
@@ -655,14 +689,13 @@
           clearTimeout(scanCooldownTimer);
           scanCooldownTimer = setTimeout(function() {
             lastScannedCode = "";
-          }, 3000);
+          }, 2000);
         }
       },
       function onScanFailure() {}
     ).then(function() {
       isCameraRunning = true;
 
-      // ★インカメラ時に鏡像（左右反転）表示を適用
       const videoElem = document.querySelector('#reader video');
       if (videoElem) {
         if (currentFacingMode === "user") {
