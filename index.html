@@ -291,26 +291,28 @@
         audioCtx.resume();
       }
       
+      // 1音目（ド：C6 = 1046.5Hz）
       const osc1 = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(1760, audioCtx.currentTime);
-      gain1.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      osc1.type = 'sine'; // 芯のある澄んだ高音
+      osc1.frequency.setValueAtTime(1046.5, audioCtx.currentTime);
+      gain1.gain.setValueAtTime(0.25, audioCtx.currentTime);
       gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
       osc1.connect(gain1);
       gain1.connect(audioCtx.destination);
       osc1.start();
       osc1.stop(audioCtx.currentTime + 0.08);
 
+      // 2音目（ソ：G6 = 1567.98Hz）
       const osc2 = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
       osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(2637, audioCtx.currentTime + 0.09);
-      gain2.gain.setValueAtTime(0.15, audioCtx.currentTime + 0.09);
+      osc2.frequency.setValueAtTime(1567.98, audioCtx.currentTime + 0.07);
+      gain2.gain.setValueAtTime(0.25, audioCtx.currentTime + 0.07);
       gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
       osc2.connect(gain2);
       gain2.connect(audioCtx.destination);
-      osc2.start(audioCtx.currentTime + 0.09);
+      osc2.start(audioCtx.currentTime + 0.07);
       osc2.stop(audioCtx.currentTime + 0.18);
     } catch (e) {}
   }
