@@ -97,6 +97,26 @@
       align-items: center;
     }
 
+    .smooth-mode-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--primary-color);
+      cursor: pointer;
+      background: #f0eae1;
+      padding: 4px 8px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      white-space: nowrap;
+      user-select: none;
+    }
+    .smooth-mode-label input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: var(--primary-color);
+    }
+
     /* モード切替ボタン (画面右上) */
     .btn-mode-toggle {
       font-size: 12.5px;
@@ -402,6 +422,9 @@
   <div class="app-header">
     <div class="admin-title">受付用 照合システム</div>
     <div class="header-actions">
+      <label class="smooth-mode-label" title="スムーズモード: ON時は1名様で自動受付完了します">
+        <input type="checkbox" id="chkSmoothMode" checked onchange="toggleSmoothMode()"> ⚡ スムーズ
+      </label>
       <button type="button" class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 カメラ切替</button>
       <button type="button" id="btnToggleMode" class="btn-mode-toggle" onclick="toggleKeypadMode()">
         <span>⌨️ 5桁番号で受付</span>
@@ -471,6 +494,20 @@
   let isKeypadMode = false;
   let currentFacingMode = "environment";
   let html5QrCode = null;
+
+  let isSmoothMode = true;
+
+  function toggleSmoothMode() {
+    const chk = document.getElementById('chkSmoothMode');
+    if (chk) {
+      isSmoothMode = chk.checked;
+      if (isSmoothMode) {
+        showAutoToast("⚡ スムーズモード ON<br><span style='font-size:12px;'>1名様は自動受付完了します</span>", 1500);
+      } else {
+        showAutoToast("💬 スムーズモード OFF<br><span style='font-size:12px;'>毎回確認ダイアログを表示します</span>", 1500);
+      }
+    }
+  }
 
   function toggleKeypadMode(forceMode) {
     if (typeof forceMode === 'boolean') {
@@ -586,7 +623,13 @@
         if (res && res.success) {
           playBeepSound();
           currentData = res;
-          showResultModal(res);
+
+          // スムーズモード判定: 未受付かつ1名様の場合は自動受付完了
+          if (isSmoothMode && res.status !== "キャンセル" && res.status !== "受付済" && parseInt(res.count, 10) === 1) {
+            confirmCheckIn(1);
+          } else {
+            showResultModal(res);
+          }
         } else {
           document.getElementById('statusMsg').innerText = "❌ 該当なし: " + inputCode;
           showAutoToast("❌ 該当なし: " + inputCode, 2000);
