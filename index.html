@@ -635,8 +635,6 @@
     if (!isSmoothMode) {
       setLock(true);
       document.getElementById('statusMsg').innerText = "照合中 (" + targetCode + ")...";
-    } else {
-      showAutoToast("🔍 照合中: " + targetCode + "...", 800);
     }
 
     callGasApi(
@@ -770,23 +768,31 @@
     );
   }
 
-  function showAutoToast(msg, duration) {
+  let toastTimer = null;
+  function showAutoToast(msg, duration, isWarning) {
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+      toastTimer = null;
+    }
     const oldToast = document.getElementById('autoToast');
     if (oldToast) oldToast.remove();
 
     const toast = document.createElement('div');
     toast.id = 'autoToast';
-    toast.className = 'toast-popup';
+    toast.className = 'toast-popup' + (isWarning ? ' toast-warning' : '');
     toast.innerHTML = msg;
     document.body.appendChild(toast);
 
-    setTimeout(function() {
-      if (toast) {
-        toast.style.transition = "opacity 0.3s ease";
+    toastTimer = setTimeout(function() {
+      if (toast && toast.parentNode) {
         toast.style.opacity = "0";
-        setTimeout(function() { toast.remove(); }, 300);
+        setTimeout(function() {
+          if (toast && toast.parentNode) {
+            toast.remove();
+          }
+        }, 300);
       }
-    }, duration);
+    }, duration || 1500);
   }
 
   function playBeepSound() {
@@ -835,16 +841,22 @@
       { facingMode: currentFacingMode },
       config,
       function onScanSuccess(decodedText) {
+        if (!isSmoothMode) {
+          const modal = document.getElementById('resultModal');
+          if (modal && modal.style.display === 'flex') return;
+        }
+
         const code = extractCode(decodedText);
         if (code && code !== lastScannedCode && !isLoading) {
           lastScannedCode = code;
+          playBeepSound(); // スキャン成功時に即座にこだわりのピッピ音を発音！
           inputCode = code;
-          updateDisplay();
+          searchCode();
           
           if (scanCooldownTimer) clearTimeout(scanCooldownTimer);
           scanCooldownTimer = setTimeout(function() {
             lastScannedCode = "";
-          }, 3000);
+          }, 2000);
         }
       },
       function onScanError(errorMessage) {}
