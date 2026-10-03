@@ -4,131 +4,124 @@
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- パターン1：高視認性Webユニバーサルデザインフォント（Noto Sans JP）の読み込み -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --primary-color: #8b7355;
       --primary-hover: #6d5a42;
-      --accent-color: #c5a059;
-      --bg-color: #f7f5f0;
+      --accent-color: #b38636;
+      --bg-color: #ffffff;
       --card-bg: #ffffff;
-      --text-main: #333333;
-      --text-sub: #666666;
-      --danger-color: #8b0000;
-      --border-color: #e5dec9;
+      --text-main: #111111;
+      --text-sub: #444444;
+      --danger-color: #a00000;
+      --border-color: #d1c7b7;
     }
 
     * {
       box-sizing: border-box;
-      font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
+      /* 全要素に Noto Sans JP を一括適用 */
+      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
     }
 
     body {
       margin: 0;
-      padding: 24px 16px;
+      padding: 16px;
       background: var(--bg-color);
-      background-image: radial-gradient(#e5dec9 1.5px, transparent 1.5px);
-      background-size: 18px 18px;
       min-height: 100vh;
       display: flex;
-      align-items: center;
       justify-content: center;
+      color: var(--text-main);
     }
 
+    /* 背景枠を排除し、画面幅を広く使って読みやすさを向上 */
     .container {
       width: 100%;
-      max-width: 440px;
+      max-width: 600px;
       background: var(--card-bg);
-      padding: 36px 28px;
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(139, 115, 85, 0.12);
-      border: 1px solid var(--border-color);
+      padding: 12px 4px;
       position: relative;
-    }
-
-    .container::before {
-      content: "";
-      position: absolute;
-      top: 6px; left: 6px; right: 6px; bottom: 6px;
-      border: 1px solid var(--border-color);
-      pointer-events: none;
-      border-radius: 4px;
     }
 
     .header-badge {
       text-align: center;
-      font-size: 13px;
+      font-size: 15px;
       letter-spacing: 2px;
       color: var(--accent-color);
-      font-weight: bold;
+      font-weight: 700;
       margin-bottom: 8px;
-      font-family: sans-serif;
     }
 
     h2 {
       text-align: center;
       color: var(--text-main);
-      margin: 0 0 12px 0;
-      font-size: 21px;
-      font-weight: bold;
+      margin: 0 0 16px 0;
+      font-size: 24px;
+      font-weight: 900;
       line-height: 1.4;
       letter-spacing: 1px;
     }
 
     .event-date {
       text-align: center;
-      font-size: 14px;
+      font-size: 16px;
+      font-weight: 700;
       color: var(--text-main);
       background: #fdfbf7;
-      border-top: 1px solid var(--border-color);
-      border-bottom: 1px solid var(--border-color);
-      padding: 8px 0;
-      margin-bottom: 24px;
-      font-family: sans-serif;
+      border-top: 2px solid var(--border-color);
+      border-bottom: 2px solid var(--border-color);
+      padding: 12px 0;
+      margin-bottom: 28px;
       letter-spacing: 1px;
     }
 
     .subtitle {
       text-align: center;
       color: var(--text-sub);
-      font-size: 13px;
-      margin-bottom: 20px;
-      font-family: sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      line-height: 1.5;
     }
 
     .initial-selector {
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      margin: 20px 0 16px 0;
+      gap: 16px;
+      margin: 20px 0 20px 0;
     }
 
     .btn-main-choice {
       width: 100%;
-      padding: 18px 20px;
-      font-size: 15px;
-      font-weight: bold;
-      border: 1px solid var(--border-color);
+      padding: 22px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      border: 2px solid var(--border-color);
       background: #fdfbf7;
       color: var(--text-main);
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
       text-align: left;
       display: flex;
       align-items: center;
       justify-content: space-between;
       transition: all 0.2s ease;
-      font-family: sans-serif;
     }
 
     .btn-main-choice:hover, .btn-main-choice:active {
       border-color: var(--accent-color);
       background: #ffffff;
-      box-shadow: 0 2px 8px rgba(197, 160, 89, 0.2);
+      box-shadow: 0 4px 12px rgba(197, 160, 89, 0.25);
     }
 
     .btn-main-choice.cancel-style {
-      border-color: #f2e3e3;
-      background: #fffafa;
+      border-color: #f2c6c6;
+      background: #fff8f8;
       color: var(--danger-color);
     }
 
@@ -138,7 +131,7 @@
     }
 
     .diamond-icon {
-      font-size: 14px;
+      font-size: 16px;
       color: var(--accent-color);
     }
 
@@ -148,24 +141,23 @@
 
     .type-selector {
       display: flex;
-      gap: 8px;
-      background: #fdfbf7;
-      padding: 4px;
+      gap: 10px;
+      background: #f5f2eb;
+      padding: 6px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
-      margin-bottom: 24px;
-      font-family: sans-serif;
+      border-radius: 8px;
+      margin-bottom: 28px;
     }
 
     .btn-type {
       flex: 1;
-      padding: 10px;
-      font-size: 13px;
-      font-weight: bold;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
       border: none;
       background: transparent;
       color: var(--text-sub);
-      border-radius: 2px;
+      border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -173,34 +165,35 @@
     .btn-type.active {
       background: var(--primary-color);
       color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       text-align: left;
-      font-family: sans-serif;
     }
 
     label {
-      font-weight: bold;
-      font-size: 13px;
+      font-weight: 700;
+      font-size: 16px;
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: var(--text-main);
+      line-height: 1.4;
     }
 
     input, select {
       width: 100%;
-      height: 48px;
-      padding: 0 14px;
-      font-size: 16px;
+      height: 56px;
+      padding: 0 16px;
+      font-size: 18px;
+      font-weight: 500;
       color: var(--text-main);
       background-color: #fdfbf7;
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
       transition: all 0.2s ease;
       outline: none;
-      font-family: sans-serif;
       -webkit-appearance: none;
       appearance: none;
     }
@@ -216,33 +209,111 @@
     }
 
     select {
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b7355' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b7355' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
       background-repeat: no-repeat;
-      background-position: right 12px center;
-      background-size: 16px;
-      padding-right: 36px;
+      background-position: right 16px center;
+      background-size: 20px;
+      padding-right: 44px;
     }
 
     input:focus, select:focus {
       background-color: #ffffff;
       border-color: var(--accent-color);
-      box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.2);
+      box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.3);
+    }
+
+    /* ラジオボタンエリア用スタイル */
+    .radio-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .radio-label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 52px;
+      background: #fdfbf7;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      transition: all 0.2s ease;
+      margin-bottom: 0;
+    }
+
+    .radio-label input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      accent-color: var(--primary-color);
+    }
+
+    .radio-label:has(input:checked) {
+      background: #ffffff;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-color);
+    }
+
+    /* 合同演奏の入力アコーディオンコンテナ */
+    .perf-sub-inputs {
+      background: #fbf9f4;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px 16px 8px 16px;
+      margin-top: 16px;
+    }
+
+    /* 楽曲案内カードスタイル */
+    .song-info-card {
+      background: #ffffff;
+      border: 2px solid var(--border-color);
+      border-left: 6px solid var(--accent-color);
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+    }
+
+    .song-info-title {
+      font-weight: 700;
+      color: var(--primary-color);
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .song-info-body {
+      font-size: 15px;
+      color: var(--text-main);
+      line-height: 1.7;
+    }
+
+    .song-info-note {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border-color);
+      line-height: 1.5;
     }
 
     .btn-submit {
       width: 100%;
-      padding: 16px;
-      font-size: 16px;
-      font-weight: bold;
+      padding: 20px;
+      font-size: 19px;
+      font-weight: 700;
       color: white;
       background: var(--primary-color);
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 16px;
       transition: all 0.2s ease;
       letter-spacing: 2px;
-      font-family: sans-serif;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
 
     .btn-submit:hover, .btn-submit:active {
@@ -252,48 +323,48 @@
     .btn-submit:disabled {
       background: #ccc;
       cursor: not-allowed;
+      box-shadow: none;
     }
 
     .notice {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--text-sub);
       background: #fdfbf7;
-      padding: 14px;
-      border: 1px dashed var(--border-color);
-      border-radius: 4px;
-      margin-top: 20px;
-      line-height: 1.6;
-      font-family: sans-serif;
+      padding: 18px;
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      margin-top: 28px;
+      line-height: 1.7;
     }
 
     .result-box {
       text-align: center;
       display: none;
-      font-family: sans-serif;
     }
 
     .code-card {
       background: #fdfbf7;
-      border: 1px solid var(--border-color);
-      padding: 24px 16px;
-      border-radius: 4px;
-      margin: 24px 0;
+      border: 2px solid var(--border-color);
+      padding: 28px 20px;
+      border-radius: 8px;
+      margin: 28px 0;
     }
 
     .code-box {
-      font-size: 42px;
-      font-weight: bold;
+      font-size: 48px;
+      font-weight: 900;
       color: var(--primary-color);
-      letter-spacing: 6px;
-      margin-top: 6px;
+      letter-spacing: 8px;
+      margin-top: 8px;
     }
 
     .label-hint {
-      font-size: 11px;
-      color: #c5a059;
-      font-weight: normal;
-      margin-top: 2px;
+      font-size: 13px;
+      color: #936d22;
+      font-weight: 700;
+      margin-top: 4px;
       display: block;
+      line-height: 1.4;
     }
 
     /* 画面内エラーメッセージ用スタイル（強調版） */
@@ -301,22 +372,120 @@
       display: none;
       background: var(--danger-color);
       color: #ffffff;
-      border: 1px solid #5a0000;
-      padding: 14px 16px;
-      border-radius: 4px;
-      font-size: 13px;
-      font-weight: bold;
-      margin-top: 16px;
-      margin-bottom: 8px;
+      border: 2px solid #5a0000;
+      padding: 16px 18px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 20px;
+      margin-bottom: 12px;
       text-align: center;
       line-height: 1.5;
-      font-family: sans-serif;
       box-shadow: 0 4px 12px rgba(139, 0, 0, 0.25);
     }
+
     .loading-locked {
       pointer-events: none !important;
       opacity: 0.5;
       transition: opacity 0.2s ease;
+    }
+
+    /* パターンC: 過去申込アコーディオン用スタイル */
+    .history-card {
+      background: #fdfbf7;
+      border: 2px solid var(--accent-color);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(179, 134, 54, 0.12);
+    }
+
+    .history-summary {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      outline: none;
+    }
+
+    .history-badge-count {
+      background: var(--accent-color);
+      color: #ffffff;
+      font-size: 13px;
+      padding: 2px 10px;
+      border-radius: 12px;
+      margin-left: 8px;
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0 0 0;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 10px;
+    }
+
+    .history-item {
+      padding: 10px 8px;
+      border-bottom: 1px solid #efe8db;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-item-info {
+      font-size: 14px;
+      color: var(--text-main);
+    }
+
+    .history-item-code {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--primary-color);
+      letter-spacing: 1px;
+      margin-right: 6px;
+    }
+
+    .history-btn-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-history-view {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-history-view:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-history-cancel {
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #fff0f0;
+      color: var(--danger-color);
+      border: 1px solid #f2c6c6;
+      border-radius: 6px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -328,31 +497,20 @@
     <h2>富山市消防音楽隊<br>創立45周年記念演奏会</h2>
     <div class="event-date">日時：令和9年12月23日（木）</div>
 
-    <div id="stepSelect">
-      <p class="subtitle">ご希望の手続きを選択してください</p>
-      <div class="initial-selector">
-        <button type="button" class="btn-main-choice" onclick="startForm('新規')">
-          <span>演奏会への事前お申し込み</span>
-          <span class="diamond-icon">◆</span>
-        </button>
-        <button type="button" class="btn-main-choice cancel-style" onclick="startForm('キャンセル')">
-          <span>お申し込みのキャンセル</span>
-          <span class="diamond-icon cancel">◆</span>
-        </button>
-      </div>
-
-      <div class="notice">
-        💡 <strong>ご人数の変更をご希望の場合</strong><br>
-        一度キャンセルを完了させた後、あらためて「事前お申し込み」より正しい人数でお申し込み直しをお願いいたします。
-      </div>
+    <!-- パターンC: 過去の申込情報アコーディオン -->
+    <div id="historyContainer" class="history-card" style="display: none;">
+      <details id="historyDetails" open>
+        <summary class="history-summary">
+          <span>📱 過去のお申し込み（再表示）</span>
+          <span class="history-badge-count"><span id="historyCount">0</span>件</span>
+        </summary>
+        <ul id="historyList" class="history-list">
+          <!-- JSで過去申込リストを動的生成 -->
+        </ul>
+      </details>
     </div>
 
-    <div id="stepInputs" style="display: none;">
-      <div class="type-selector">
-        <button type="button" id="btnNew" class="btn-type" onclick="selectType('新規')">新規お申し込み</button>
-        <button type="button" id="btnCancel" class="btn-type" onclick="selectType('キャンセル')">キャンセル</button>
-      </div>
-
+    <div id="stepInputs">
       <div id="newInputs">
         <div class="form-group">
           <label>来場者区分</label>
@@ -363,6 +521,7 @@
             <option value="関係者">関係者</option>
           </select>
         </div>
+
         <div class="form-group">
           <label>
             ニックネーム（お名前）
@@ -370,8 +529,9 @@
           </label>
           <input type="text" id="nickname" placeholder="例：トヤマ / たろう / T.K">
         </div>
+
         <div class="form-group">
-          <label>ご人数（最大4名様まで）</label>
+          <label>ご来場人数（最大4名様まで）</label>
           <select id="count">
             <option value="1">1名</option>
             <option value="2">2名</option>
@@ -379,12 +539,67 @@
             <option value="4">4名</option>
           </select>
         </div>
+
+        <!-- 合同演奏企画の入力項目 -->
+        <div class="form-group">
+          <label>
+            合同演奏企画へのご参加（第1部5曲目）
+            <span class="label-hint">※第1部の最後に、ご来場の皆様と一緒に演奏する合同演奏企画を予定しております</span>
+          </label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="perfJoin" value="no" checked onclick="togglePerformanceInputs(false)"> 参加しない
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="perfJoin" value="yes" onclick="togglePerformanceInputs(true)"> 参加する
+            </label>
+          </div>
+        </div>
+
+        <!-- 「参加する」選択時のみ表示される追加入力領域 -->
+        <div id="perfSubInputs" class="perf-sub-inputs" style="display: none;">
+          
+          <!-- 演奏曲目・楽譜のご案内 -->
+          <div class="song-info-card">
+            <div class="song-info-title">🎷 演奏曲目・楽譜のご案内</div>
+            <div class="song-info-body">
+              <strong>・曲名</strong>：宝島<br>
+              <strong>・編曲</strong>：真島 俊夫<br>
+              <strong>・楽譜</strong>：ニュー・サウンズ・イン・ブラス（ヤマハミュージックエンタテインメントホールディングス刊）
+              <div class="song-info-note">
+                ※市販楽譜のため楽譜の事前配布・ダウンロードはございません。楽譜をお持ちの方は当日各自ご持参の上ご参加ください。
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>演奏参加人数</label>
+            <select id="perfCount">
+              <option value="1">1名</option>
+              <option value="2">2名</option>
+              <option value="3">3名</option>
+              <option value="4">4名</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>
+              持参予定の楽器名
+              <span class="label-hint">※複数名の場合はカンマ区切り等でご入力ください</span>
+            </label>
+            <input type="text" id="perfInstrument" placeholder="例：アルトサックス、トランペット">
+          </div>
+        </div>
       </div>
 
       <div id="cancelInputs" style="display:none;">
+        <div style="background:#fff8f8; border:1px solid #f2c6c6; border-radius:8px; padding:12px 14px; margin-bottom:16px;">
+          <strong style="color:var(--danger-color); font-size:15px;">お申し込みの取り消し（キャンセル）</strong>
+          <p style="font-size:12.5px; color:var(--text-sub); margin-top:4px;">受付番号とニックネームを入力して、取り消しを完了させてください。</p>
+        </div>
         <div class="form-group">
           <label>取り消ししたい「5桁の受付番号」</label>
-          <input type="number" id="cancelCode" placeholder="例：14820">
+          <input type="text" id="cancelCode" inputmode="numeric" pattern="[0-9]*" placeholder="例：14820">
         </div>
         <div class="form-group">
           <label>お申し込み時の「ニックネーム」</label>
@@ -395,6 +610,13 @@
       <div id="errorInlineMsg" class="error-inline-msg"></div>
 
       <button id="submitBtn" class="btn-submit" onclick="submitForm()">送信する</button>
+
+      <!-- 控えめなモード切替リンク -->
+      <div style="text-align:center; margin-top:20px;">
+        <button type="button" id="toggleCancelBtn" onclick="toggleFormMode()" style="background:none; border:none; color:var(--text-sub); font-size:13.5px; font-weight:700; text-decoration:underline; cursor:pointer;">
+          ※別端末からのキャンセルや受付番号手入力での取り消しはこちら
+        </button>
+      </div>
     </div>
   </div>
 
@@ -403,56 +625,76 @@
     <p id="resultMsg" class="subtitle" style="margin-bottom:0;">当日の受付に必要な番号です。<br>画面をスクリーンショット等で保存してください。</p>
     
     <div id="codeContainer" class="code-card">
-      <div style="font-size:12px; font-weight:bold; color:var(--accent-color); letter-spacing:2px;">受付番号</div>
+      <div style="font-size:14px; font-weight:700; color:var(--accent-color); letter-spacing:2px;">受付番号</div>
       <div id="generatedCode" class="code-box">-----</div>
     </div>
 
-    <div id="qrContainer" style="display:none; text-align:center; margin: 16px auto;">
-      <div id="qrCode" style="display:inline-block; padding:12px; background:#ffffff; border:1px solid var(--border-color); border-radius:8px;"></div>
-      <p style="font-size:12px; color:var(--text-sub); margin-top:8px; font-family:sans-serif;">当日はこのQRコードを受付スタッフにご提示ください</p>
+    <div id="qrContainer" style="display:none; text-align:center; margin: 20px auto;">
+      <div id="qrCode" style="display:inline-block; padding:16px; background:#ffffff; border:2px solid var(--border-color); border-radius:12px;"></div>
+      <p style="font-size:14px; color:var(--text-sub); margin-top:10px; font-weight:700;">当日はこのQRコードを受付スタッフにご提示ください</p>
     </div>
 
-    <p id="pFooterNotice" style="font-size:13px; color:var(--text-sub); margin-top:16px; font-family:sans-serif;">📱 この画面をスクリーンショットで保存してください</p>
+    <p id="pFooterNotice" style="font-size:14px; color:var(--text-sub); margin-top:20px; font-weight:700;">📱 この画面をスクリーンショットで保存してください</p>
+    <button type="button" class="btn-submit" style="background:#6c757d; margin-top:24px;" onclick="resetToHome()">トップ画面に戻る</button>
   </div>
-  <div class="version-info" style="text-align:center;margin-top:20px;color:var(--text-sub);font-size:11px;border-top:1px dashed var(--border-color);padding-top:12px;font-family:sans-serif;">バージョン <?= version ?></div>
+  <div class="version-info" style="text-align:center;margin-top:28px;color:var(--text-sub);font-size:12px;border-top:1px dashed var(--border-color);padding-top:14px;">バージョン <?= version ?></div>
 </div>
 
 <script>
   let currentType = "新規";
 
   function startForm(type) {
-    document.getElementById('stepSelect').style.display = 'none';
-    document.getElementById('stepInputs').style.display = 'block';
     selectType(type);
+  }
+
+  function toggleFormMode() {
+    if (currentType === "新規") {
+      selectType("キャンセル");
+    } else {
+      selectType("新規");
+    }
   }
 
   function selectType(type) {
     currentType = type;
-    const btnNew = document.getElementById('btnNew');
-    const btnCancel = document.getElementById('btnCancel');
     const newInputs = document.getElementById('newInputs');
     const cancelInputs = document.getElementById('cancelInputs');
     const submitBtn = document.getElementById('submitBtn');
+    const toggleCancelBtn = document.getElementById('toggleCancelBtn');
     const errorInlineMsg = document.getElementById('errorInlineMsg');
 
-    errorInlineMsg.style.display = 'none';
-    errorInlineMsg.innerText = '';
+    if (errorInlineMsg) {
+      errorInlineMsg.style.display = 'none';
+      errorInlineMsg.innerText = '';
+    }
 
     if (type === "新規") {
-      btnNew.classList.add('active');
-      btnCancel.classList.remove('active');
-      newInputs.style.display = 'block';
-      cancelInputs.style.display = 'none';
-      submitBtn.innerText = '送信する';
-      submitBtn.style.background = 'var(--primary-color)';
+      if (newInputs) newInputs.style.display = 'block';
+      if (cancelInputs) cancelInputs.style.display = 'none';
+      if (submitBtn) {
+        submitBtn.innerText = '送信する';
+        submitBtn.style.background = 'var(--primary-color)';
+      }
+      if (toggleCancelBtn) {
+        toggleCancelBtn.innerText = '※別端末からのキャンセルや受付番号手入力での取り消しはこちら';
+      }
     } else {
-      btnCancel.classList.add('active');
-      btnNew.classList.remove('active');
-      newInputs.style.display = 'none';
-      cancelInputs.style.display = 'block';
-      submitBtn.innerText = 'キャンセルを確定する';
-      submitBtn.style.background = 'var(--danger-color)';
+      if (newInputs) newInputs.style.display = 'none';
+      if (cancelInputs) cancelInputs.style.display = 'block';
+      if (submitBtn) {
+        submitBtn.innerText = 'キャンセルを確定する';
+        submitBtn.style.background = 'var(--danger-color)';
+      }
+      if (toggleCancelBtn) {
+        toggleCancelBtn.innerText = '← お申し込みフォーム（新規）に戻る';
+      }
     }
+  }
+
+  // 合同演奏フォームの表示切替
+  function togglePerformanceInputs(show) {
+    const perfSubInputs = document.getElementById('perfSubInputs');
+    perfSubInputs.style.display = show ? 'block' : 'none';
   }
 
   function showError(msg) {
@@ -486,11 +728,30 @@
     if (currentType === "新規") {
       const category = document.getElementById('category').value;
       const nickname = document.getElementById('nickname').value.trim();
-      const count = document.getElementById('count').value;
+      const count = Number(document.getElementById('count').value);
 
       if (!nickname) {
         showError("⚠️ ニックネームを入力してください");
         return;
+      }
+
+      // 合同演奏項目の入力チェックと値取得
+      const isPerfJoin = document.querySelector('input[name="perfJoin"]:checked').value === 'yes';
+      let perfCount = 0;
+      let perfInstrument = '';
+
+      if (isPerfJoin) {
+        perfCount = Number(document.getElementById('perfCount').value);
+        perfInstrument = document.getElementById('perfInstrument').value.trim();
+
+        if (perfCount > count) {
+          showError("⚠️ 演奏参加人数はご来場人数（" + count + "名）以下に設定してください");
+          return;
+        }
+        if (!perfInstrument) {
+          showError("⚠️ 持参予定の楽器名を入力してください");
+          return;
+        }
       }
 
       setFormLock(true);
@@ -506,10 +767,20 @@
             btn.innerText = "送信する";
             return;
           }
+          // LocalStorageへの保存連携
+          saveBookingToLocalStorage({
+            id: String(res.code),
+            nickname: nickname,
+            count: count,
+            category: category
+          });
+
           document.getElementById('formArea').style.display = 'none';
           document.getElementById('resultArea').style.display = 'block';
           document.getElementById('codeContainer').style.display = 'block';
           document.getElementById('pFooterNotice').style.display = 'block';
+          document.getElementById('resultTitle').innerText = "お申し込み完了";
+          document.getElementById('resultMsg').innerText = "当日の受付に必要な番号です。\n画面をスクリーンショット等で保存してください。";
           document.getElementById('generatedCode').innerText = res.code;
           generateQRCode(res.code);
         })
@@ -519,7 +790,7 @@
           btn.disabled = false;
           btn.innerText = "送信する";
         })
-        .registerNewUser(category, nickname, count);
+        .registerNewUser(category, nickname, count, perfCount, perfInstrument);
 
     } else {
       const cancelCode = document.getElementById('cancelCode').value.trim();
@@ -547,6 +818,9 @@
             btn.innerText = "キャンセルを確定する";
             return;
           }
+          // LocalStorageからの削除連携
+          removeBookingFromLocalStorage(cancelCode);
+
           document.getElementById('formArea').style.display = 'none';
           document.getElementById('resultArea').style.display = 'block';
           document.getElementById('codeContainer').style.display = 'none';
@@ -572,9 +846,9 @@
     try {
       new QRCode(qrEl, {
         text: String(code),
-        width: 180,
-        height: 180,
-        colorDark: '#333333',
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H
       });
@@ -583,6 +857,123 @@
       container.style.display = 'none';
     }
   }
+
+  // ==========================================
+  // パターンC: LocalStorage連携 & アコーディオン再表示機能
+  // ==========================================
+
+  function saveBookingToLocalStorage(bookingData) {
+    try {
+      let history = JSON.parse(localStorage.getItem("myBookings") || "[]");
+      const existingIndex = history.findIndex(item => String(item.id) === String(bookingData.id));
+      if (existingIndex > -1) {
+        history[existingIndex] = bookingData;
+      } else {
+        history.push(bookingData);
+      }
+      localStorage.setItem("myBookings", JSON.stringify(history));
+      renderHistoryUI();
+    } catch(e) {
+      console.error("LocalStorage save error", e);
+    }
+  }
+
+  function removeBookingFromLocalStorage(code) {
+    try {
+      let history = JSON.parse(localStorage.getItem("myBookings") || "[]");
+      history = history.filter(item => String(item.id) !== String(code));
+      localStorage.setItem("myBookings", JSON.stringify(history));
+      renderHistoryUI();
+    } catch(e) {
+      console.error("LocalStorage remove error", e);
+    }
+  }
+
+  function renderHistoryUI() {
+    try {
+      const history = JSON.parse(localStorage.getItem("myBookings") || "[]");
+      const container = document.getElementById("historyContainer");
+      const list = document.getElementById("historyList");
+      const countSpan = document.getElementById("historyCount");
+
+      if (!history || history.length === 0) {
+        if (container) container.style.display = "none";
+        return;
+      }
+
+      if (container) container.style.display = "block";
+      if (countSpan) countSpan.textContent = history.length;
+      if (!list) return;
+
+      list.innerHTML = "";
+
+      history.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "history-item";
+        
+        const nicknameDisplay = item.nickname ? item.nickname : "ご来場者";
+        const countDisplay = item.count ? item.count + "名" : "";
+        const catDisplay = item.category ? `[${item.category}]` : "";
+
+        li.innerHTML = `
+          <div class="history-item-info">
+            <span class="history-item-code">${item.id}</span>
+            <span>${catDisplay} ${nicknameDisplay} ${countDisplay}</span>
+          </div>
+          <div class="history-btn-group">
+            <button type="button" class="btn-history-view" onclick="selectTicket('${item.id}')">QR表示</button>
+            <button type="button" class="btn-history-cancel" onclick="fillCancelForm('${item.id}', '${nicknameDisplay}')">キャンセル</button>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    } catch(e) {
+      console.error("renderHistoryUI error", e);
+    }
+  }
+
+  function selectTicket(id) {
+    try {
+      const history = JSON.parse(localStorage.getItem("myBookings") || "[]");
+      const target = history.find(item => String(item.id) === String(id));
+
+      if (!target) return;
+
+      document.getElementById('formArea').style.display = 'none';
+      document.getElementById('resultArea').style.display = 'block';
+      document.getElementById('codeContainer').style.display = 'block';
+      document.getElementById('pFooterNotice').style.display = 'block';
+      
+      document.getElementById('resultTitle').innerText = "お申し込みチケット（保管分）";
+      document.getElementById('resultMsg').innerText = `${target.nickname} 様 (${target.count || 1}名) のお申し込みチケットです。\n当日の受付でこの画面またはスクリーンショットをご提示ください。`;
+      document.getElementById('generatedCode').innerText = target.id;
+      
+      generateQRCode(target.id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) {
+      console.error("selectTicket error", e);
+    }
+  }
+
+  function fillCancelForm(code, nickname) {
+    startForm('キャンセル');
+    document.getElementById('cancelCode').value = code;
+    document.getElementById('cancelNickname').value = nickname;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetToHome() {
+    document.getElementById('resultArea').style.display = 'none';
+    document.getElementById('formArea').style.display = 'block';
+    const stepInputs = document.getElementById('stepInputs');
+    if (stepInputs) stepInputs.style.display = 'block';
+    selectType('新規');
+    renderHistoryUI();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 初期読み込み実行
+  window.addEventListener("DOMContentLoaded", renderHistoryUI);
 </script>
 
 </body>

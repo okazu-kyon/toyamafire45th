@@ -33,6 +33,12 @@ function doGet(e) {
     return template.evaluate()
       .setTitle('受付用 照合システム')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+  } else if (page === 'summary' || page === 'overview' || page === 'doc') {
+    const template = HtmlService.createTemplateFromFile('summary');
+    template.version = SYSTEM_VERSION;
+    return template.evaluate()
+      .setTitle('導入概要書 - 事前受付＆当日入場管理システム')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
   }
   const template = HtmlService.createTemplateFromFile('form');
   template.version = SYSTEM_VERSION;
@@ -69,9 +75,9 @@ function getTargetSheet() {
 /**
  * 新規お申し込み登録処理
  * スプレッドシート構造: 
- * A:受付番号 / B:来場者区分 / C:ニックネーム / D:人数 / E:ステータス / F:入場人数 / G:日時
+ * A:受付番号 / B:来場者区分 / C:ニックネーム / D:人数 / E:ステータス / F:入場人数 / G:日時 / H:演奏参加人数 / I:持参楽器名
  */
-function registerNewUser(category, nickname, count) {
+function registerNewUser(category, nickname, count, perfCount, perfInstrument) {
   const lock = LockService.getScriptLock();
   try {
     // 同時書き込みを防ぐため最大30秒待機
@@ -127,8 +133,13 @@ function registerNewUser(category, nickname, count) {
     // 5桁のユニークな受付番号を発行
     let code = generateUniqueCode(data);
     const timestamp = new Date();
+
+    // 演奏参加データの整理
+    const cleanPerfCount = Number(perfCount) || 0;
+    const cleanPerfInstrument = perfInstrument ? String(perfInstrument).trim() : '';
     
-    // スプレッドシートに書き込み (実シートの列順: A=受付番号, B=区分, C=ニックネーム, D=人数, E=ステータス, F=入場人数, G=日時)
+    // スプレッドシートに書き込み
+    // A:受付番号, B:区分, C:ニックネーム, D:人数, E:ステータス, F:入場人数, G:日時, H:演奏参加人数, I:持参楽器名
     sheet.appendRow([
       code,
       category,
@@ -136,7 +147,9 @@ function registerNewUser(category, nickname, count) {
       requestCount,
       '未受付',
       '',
-      timestamp
+      timestamp,
+      cleanPerfCount,
+      cleanPerfInstrument
     ]);
 
     return {
@@ -173,8 +186,15 @@ function cancelUser(code, nickname) {
   try {
     const sheet = getTargetSheet();
     const data = sheet.getDataRange().getValues();
-    const strCode = String(code).trim();
+    const cleanCode = normalizeString(code);
     const cleanNickname = normalizeString(nickname);
+
+    if (!cleanCode) {
+      return {
+        success: false,
+        message: '取り消ししたい5桁の受付番号を入力してください。'
+      };
+    }
 
     if (!cleanNickname) {
       return {
@@ -183,13 +203,14 @@ function cancelUser(code, nickname) {
       };
     }
 
-    for (let i = 5; i < data.length; i++) {
-      const rowCode = String(data[i][0]).trim();    // A列: 受付番号
-      const rowNickname = String(data[i][2]);       // C列: ニックネーム
-      const rowStatus = String(data[i][4]).trim();  // E列: ステータス
+    // 全行をスキャン（ヘッダー行や集計行を除外して正しく照合）
+    for (let i = 0; i < data.length; i++) {
+      const rowCode = normalizeString(data[i][0]);    // A列: 受付番号
+      const rowNickname = normalizeString(data[i][2]); // C列: ニックネーム
+      const rowStatus = String(data[i][4]).trim();    // E列: ステータス
 
-      // 受付番号とニックネームの両方を照合
-      if (rowCode === strCode && normalizeString(rowNickname) === cleanNickname) {
+      // 受付番号とニックネームの両方を照合（表記揺れ吸収）
+      if (rowCode && rowCode === cleanCode && rowNickname === cleanNickname) {
         if (rowStatus === 'キャンセル') {
           return {
             success: false,
@@ -315,8 +336,11 @@ function checkInUser(code, actualCount) {
  */
 function generateUniqueCode(data) {
   const existingCodes = new Set();
-  for (let i = 5; i < data.length; i++) {
-    existingCodes.add(String(data[i][0]).trim()); // A列: 受付番号
+  for (let i = 0; i < data.length; i++) {
+    const code = normalizeString(data[i][0]);
+    if (code) {
+      existingCodes.add(code);
+    }
   }
 
   let newCode = '';
@@ -328,24 +352,26 @@ function generateUniqueCode(data) {
 }
 
 /**
- * 文字列の表記揺れ吸収（全角半角・大文字小文字・前後空白の標準化）
+ * 文字列の表記揺れ吸収（全角半角・大文字小文字・全角スペース・前後空白の標準化）
  */
 function normalizeString(str) {
-  if (!str) return '';
+  if (str === null || str === undefined) return '';
   return String(str)
     .trim()
     .toLowerCase()
+    .replace(/[\u3000]/g, ' ')
     .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
       return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-    });
+    })
+    .replace(/\s+/g, ' ');
 }
 
 /**
  * 【初回セットアップ用】スプレッドシート上部に集計ダッシュボードを自動構築する
  * ※ この関数はGASエディタから手動で1回だけ実行してください。
- *   既存のヘッダー行(1行目)の上に4行を挿入し、
- *   集計ラベル・数式・書式を自動設定します。
- *   実行後は「表示 > 固定 > 5行」を手動で設定してください。
+ *    既存のヘッダー行(1行目)の上に4行を挿入し、
+ *    集計ラベル・数式・書式を自動設定します。
+ *    実行後は「表示 > 固定 > 5行」を手動で設定してください。
  */
 function setupDashboard() {
   const sheet = getTargetSheet();
@@ -356,7 +382,7 @@ function setupDashboard() {
   // ==========================
   // 1行目: 全体集計ラベル
   // ==========================
-  const row1Labels = ['定員', '総申込数', '残席数', '総入場数', '入場率', 'キャンセル数'];
+  const row1Labels = ['定員', '総申込数', '残席数', '総入場数', '入場率', 'キャンセル数', '', '演奏参加総数'];
   sheet.getRange(1, 1, 1, row1Labels.length).setValues([row1Labels]);
   sheet.getRange(1, 1, 1, row1Labels.length)
     .setFontWeight('bold')
@@ -368,15 +394,16 @@ function setupDashboard() {
   // ==========================
   // 2行目: 全体集計の数式・値
   // ==========================
-  sheet.getRange('A2').setValue(CAPACITY_LIMIT);                            // 定員
+  sheet.getRange('A2').setValue(CAPACITY_LIMIT);                             // 定員
   sheet.getRange('B2').setFormula('=SUMIFS(D6:D, E6:E, "<>キャンセル")');   // 総申込数
-  sheet.getRange('C2').setFormula('=A2-B2');                                // 残席数
-  sheet.getRange('D2').setFormula('=SUM(F6:F)');                            // 総入場数
+  sheet.getRange('C2').setFormula('=A2-B2');                                 // 残席数
+  sheet.getRange('D2').setFormula('=SUM(F6:F)');                             // 総入場数
   sheet.getRange('E2').setFormula('=IF(B2>0, D2/B2, 0)');                   // 入場率
-  sheet.getRange('F2').setFormula('=COUNTIF(E6:E, "キャンセル")');          // キャンセル数
+  sheet.getRange('F2').setFormula('=COUNTIF(E6:E, "キャンセル")');           // キャンセル数
+  sheet.getRange('H2').setFormula('=SUMIFS(H6:H, E6:E, "<>キャンセル")');   // 演奏参加総数
   
   // 2行目の書式設定
-  sheet.getRange(2, 1, 1, 6)
+  sheet.getRange(2, 1, 1, 8)
     .setFontWeight('bold')
     .setFontSize(14)
     .setHorizontalAlignment('center')
@@ -415,9 +442,11 @@ function setupDashboard() {
     .setVerticalAlignment('middle');
   
   // ==========================
-  // 5行目: データヘッダー行の書式整え
+  // 5行目: データヘッダー行の書式整え（H列:演奏人数, I列:持参楽器 を自動挿入）
   // ==========================
-  sheet.getRange(5, 1, 1, 7)
+  const headers = ['受付番号', '来場者区分', 'ニックネーム', '人数', 'ステータス', '入場人数', '日時', '演奏参加人数', '持参楽器名'];
+  sheet.getRange(5, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(5, 1, 1, headers.length)
     .setFontWeight('bold')
     .setBackground('#e8e0d0')
     .setHorizontalAlignment('center');
@@ -426,12 +455,85 @@ function setupDashboard() {
   // 罫線の設定
   // ==========================
   // 1-2行目（全体集計エリア）に外枠
-  sheet.getRange(1, 1, 2, 6).setBorder(true, true, true, true, null, null, '#8b7355', SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange(1, 1, 2, 8).setBorder(true, true, true, true, null, null, '#8b7355', SpreadsheetApp.BorderStyle.SOLID);
   // 3-4行目（区分別集計エリア）に外枠
   sheet.getRange(3, 1, 2, 8).setBorder(true, true, true, true, null, null, '#8b7355', SpreadsheetApp.BorderStyle.SOLID);
   // 5行目（ヘッダー行）に下線
-  sheet.getRange(5, 1, 1, 7).setBorder(null, null, true, null, null, null, '#8b7355', SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+  sheet.getRange(5, 1, 1, 9).setBorder(null, null, true, null, null, null, '#8b7355', SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
   
   SpreadsheetApp.flush();
   Logger.log('✅ ダッシュボードのセットアップが完了しました。「表示 > 固定 > 5行」を手動で設定してください。');
+}
+
+/**
+ * 連続スキャンテスト用ダミーデータ（30件）をスプレッドシートに自動投入する関数
+ * GASエディタから実行するか、管理者ツール等から呼び出せます。
+ */
+function setupTestUserData() {
+  const sheet = getTargetSheet();
+  const testUsers = [];
+  
+  for (let i = 1; i <= 30; i++) {
+    const numStr = String(i).padStart(3, '0');
+    const code = '90' + numStr; // 90001 〜 90030 (5桁の数字)
+    const categories = ['一般', '消防職員', '消防団員', '関係者'];
+    const category = categories[(i - 1) % categories.length];
+    const nickname = 'テスト太郎_' + numStr;
+    const count = (i % 3) + 1; // 1〜3名
+    
+    testUsers.push([
+      code,
+      category,
+      nickname,
+      count,
+      '未受付',
+      '',
+      new Date(),
+      0,
+      ''
+    ]);
+  }
+
+  // 既存の90001〜90030データがあるか確認して重複挿入を防ぐ
+  const data = sheet.getDataRange().getValues();
+  const existingCodes = new Set();
+  for (let i = 5; i < data.length; i++) {
+    existingCodes.add(String(data[i][0]).trim());
+  }
+
+  const rowsToAppend = testUsers.filter(row => !existingCodes.has(row[0]));
+  
+  if (rowsToAppend.length > 0) {
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow + 1, 1, rowsToAppend.length, 9).setValues(rowsToAppend);
+    SpreadsheetApp.flush();
+    Logger.log(`✅ テスト用ユーザーデータ ${rowsToAppend.length} 件を追加しました (90001 〜 90030)。`);
+    return { success: true, count: rowsToAppend.length, message: `${rowsToAppend.length}件のテストデータを追加しました。` };
+  } else {
+    Logger.log('ℹ️ テスト用ユーザーデータはすでに登録されています。');
+    return { success: true, count: 0, message: 'テストデータはすでに登録されています。' };
+  }
+}
+
+/**
+ * テストデータ（90001〜90030）の受付ステータスを「未受付」に一括リセットする関数
+ * GASエディタからこの関数を実行するだけで、何度でもテストを再スタートできます。
+ */
+function resetTestUserData() {
+  const sheet = getTargetSheet();
+  const data = sheet.getDataRange().getValues();
+  let resetCount = 0;
+
+  for (let i = 5; i < data.length; i++) {
+    const code = String(data[i][0]).trim();
+    if (/^90\d{3}$/.test(code)) { // 90001 〜 90030 のコードが対象
+      sheet.getRange(i + 1, 5).setValue('未受付'); // E列: ステータス
+      sheet.getRange(i + 1, 6).setValue('');        // F列: 入場人数
+      resetCount++;
+    }
+  }
+  
+  SpreadsheetApp.flush();
+  Logger.log(`🔄 テストデータ ${resetCount} 件のステータスを「未受付」にリセットしました。`);
+  return { success: true, count: resetCount, message: `${resetCount}件のテストデータを「未受付」にリセットしました。` };
 }

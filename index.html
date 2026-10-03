@@ -6,23 +6,29 @@
   <title>受付用 QR照合システム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <!-- 高視認性Webユニバーサルデザインフォント（Noto Sans JP）の読み込み -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --primary-color: #8b7355;
-      --accent-color: #c5a059;
+      --accent-color: #b38636;
       --bg-color: #f7f5f0;
       --card-bg: #ffffff;
-      --text-main: #333333;
-      --text-sub: #666666;
-      --danger-color: #8b0000;
-      --success-color: #2e7d32;
+      --text-main: #111111;
+      --text-sub: #444444;
+      --danger-color: #a00000;
+      --success-color: #1e7e34;
       --warning-color: #d97706;
-      --border-color: #e5dec9;
+      --border-color: #d1c7b7;
     }
 
     * {
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", sans-serif;
+      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
@@ -38,8 +44,25 @@
 
     body {
       background: var(--bg-color);
+      background-image: radial-gradient(#d1c7b7 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      color: var(--text-main);
+    }
+
+    /* 上部エリア（カメラ＋ディスプレイ） */
+    .top-section {
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      padding: 8px 12px 0 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      overflow: hidden;
     }
 
     /* ヘッダー周りのスマート化 */
@@ -56,8 +79,8 @@
     }
 
     .admin-title {
-      font-size: 13px;
-      font-weight: bold;
+      font-size: 15px;
+      font-weight: 700;
       color: var(--primary-color);
       letter-spacing: 0.5px;
       white-space: nowrap;
@@ -70,51 +93,51 @@
       flex-wrap: nowrap;
     }
 
-    .smooth-mode-label {
-      display: inline-flex;
+    /* モード切替ボタン (画面右上) */
+    .btn-mode-toggle {
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--primary-color);
+      color: #ffffff;
+      border: 1.5px solid var(--accent-color);
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
       align-items: center;
-      gap: 3px;
-      font-size: 11px;
-      font-weight: bold;
-      color: var(--primary-color);
-      cursor: pointer;
-      background: #f0eae1;
-      padding: 4px 8px;
-      border-radius: 14px;
-      border: 1px solid var(--border-color);
+      gap: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: all 0.2s ease;
+      user-select: none;
       white-space: nowrap;
     }
-
-    .status-badge {
-      font-size: 11px;
-      background: #e8e0d0;
-      color: var(--text-main);
-      padding: 4px 8px;
-      border-radius: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      white-space: nowrap;
+    .btn-mode-toggle:active {
+      transform: scale(0.95);
+    }
+    .btn-mode-toggle.active-keypad {
+      background: var(--accent-color);
+      border-color: #ffffff;
     }
 
-    .btn-switch-camera {
-      font-size: 11px;
-      background: #ffffff;
-      color: var(--primary-color);
-      border: 1px solid var(--border-color);
-      padding: 4px 8px;
-      border-radius: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    /* スキャン画面を全体に拡張 */
+    /* カメラプレビュー窓（デフォルトは画面いっぱい広々表示） */
     .scanner-card {
       width: 100%;
       flex: 1;
-      background: #000000;
+      min-height: 280px;
+      max-height: 420px;
+      background: #1a1a1a;
+      border-radius: 10px;
       overflow: hidden;
       position: relative;
+      border: 2px solid var(--border-color);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* テンキーモード時のカメラコンパクト化 & テンキー表示 */
+    body.mode-keypad .scanner-card {
+      min-height: 110px;
+      max-height: 140px;
     }
 
     #reader {
@@ -158,6 +181,100 @@
     }
 
     /* モーダル表示 */
+=======
+      border: 2px solid var(--border-color);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* テンキーモード時のカメラコンパクト化 & テンキー表示 */
+    body.mode-keypad .scanner-card {
+      min-height: 110px;
+      max-height: 140px;
+    }
+
+    /* ディスプレイ表示 */
+    .display-box {
+      width: 100%;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      padding: 4px 12px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      margin-bottom: 4px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid var(--border-color);
+      color: var(--primary-color);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+    }
+
+    /* 通常スキャンモード時はディスプレイ・テンキーを非表示にしカメラを広々確保 */
+    body:not(.mode-keypad) .display-box {
+      display: none;
+    }
+
+    .status-msg {
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+      height: 20px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 20px;
+    }
+
+    /* 下部固定テンキー (デフォルトは折りたたんで非表示) */
+    .bottom-keypad-container {
+      width: 100%;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 6px 14px 18px 14px;
+      box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.04);
+      display: none;
+    }
+
+    body.mode-keypad .bottom-keypad-container {
+      display: block;
+      animation: keyFade 0.2s ease-out;
+    }
+
+    @keyframes keyFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+
+    .btn-key {
+      font-size: 24px;
+      font-weight: 700;
+      padding: 9px 0;
+      background: #fdfbf7;
+      border: 1px solid var(--border-color);
+      color: var(--primary-color);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .btn-key:active { background: var(--accent-color); color: #ffffff; }
+    .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 20px; font-weight: 700; }
+    .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 20px; font-weight: 700; }
+
+    /* ==================================== */
+    /* 照合結果ポップアップシート (画面下からスッと出現) */
+    /* ==================================== */
+>>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -172,8 +289,9 @@
       max-width: 440px;
       background: var(--card-bg);
       border-radius: 18px 18px 0 0;
-      padding: 16px 20px 24px 20px;
+      padding: 18px 20px 24px 20px;
       box-shadow: 0 -8px 25px rgba(0,0,0,0.25);
+<<<<<<< HEAD
       border-top: 2px solid var(--accent-color);
     }
     .modal-badge { font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 4px; }
@@ -186,10 +304,87 @@
     .btn-short { flex: 1; padding: 8px 0; font-size: 13px; font-weight: bold; background: #ffffff; border: 1.5px solid var(--primary-color); color: var(--primary-color); border-radius: 6px; cursor: pointer; }
     
     /* トーストポップアップ：ヘッダー直下（最上部）へ配置変更 */
+=======
+      animation: slideUp 0.18s ease-out;
+      border-top: 3px solid var(--accent-color);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-badge {
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+    }
+    .modal-name {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-align: center;
+      margin: 2px 0 6px 0;
+    }
+    .modal-detail {
+      font-size: 18px;
+      color: var(--text-main);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .btn-confirm-large {
+      width: 100%;
+      padding: 16px;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+      background: var(--success-color);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(30, 126, 52, 0.3);
+      margin-bottom: 12px;
+      transition: background 0.1s;
+    }
+    .btn-confirm-large:active { background: #165b26; }
+
+    .btn-modal-close {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-sub);
+      background: #f0ebe0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .sub-change-title { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 700; }
+    .shortcut-grid { display: flex; gap: 8px; margin-bottom: 12px; }
+    .btn-short {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 15px;
+      font-weight: 700;
+      background: #ffffff;
+      border: 1.5px solid var(--primary-color);
+      color: var(--primary-color);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-short:active { background: var(--primary-color); color: white; }
+
+    /* トースト通知 */
+>>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
     .toast-popup {
       position: fixed;
       top: 50px;
       left: 50%;
+<<<<<<< HEAD
       transform: translateX(-50%);
       background: rgba(139, 115, 85, 0.95);
       color: #ffffff;
@@ -198,14 +393,29 @@
       border: 1px solid var(--accent-color);
       font-size: 14px;
       font-weight: bold;
+=======
+      transform: translate(-50%, -50%);
+      background: rgba(139, 115, 85, 0.98);
+      color: #ffffff;
+      padding: 18px 28px;
+      border-radius: 10px;
+      border: 1px solid var(--accent-color);
+      font-size: 19px;
+      font-weight: 700;
+>>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
       text-align: center;
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
       z-index: 2000;
       min-width: 260px;
+<<<<<<< HEAD
       max-width: 90%;
       pointer-events: none;
       opacity: 1;
       transition: opacity 0.3s ease;
+=======
+      line-height: 1.4;
+      animation: popIn 0.15s ease-out;
+>>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
     }
     .toast-warning {
       background: rgba(180, 40, 40, 0.95) !important;
@@ -216,6 +426,7 @@
 </head>
 <body>
 
+<<<<<<< HEAD
 <div class="app-header">
   <div class="admin-title">受付QR照合</div>
   <div class="header-actions">
@@ -224,6 +435,43 @@
     </label>
     <div class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 インカメラ</div>
     <div class="status-badge" id="cameraStatus" onclick="restartCamera()" title="タップしてカメラを再起動">📷 起動中</div>
+=======
+<!-- 上部固定エリア（カメラ窓＋ディスプレイ） -->
+<div class="top-section">
+  <div class="app-header">
+    <div class="admin-title">受付用 照合システム</div>
+    <button type="button" id="btnToggleMode" class="btn-mode-toggle" onclick="toggleKeypadMode()">
+      <span>⌨️ 5桁番号で受付</span>
+    </button>
+  </div>
+
+  <!-- 常時カメラ読み取り窓（スキャンモード時は画面いっぱいに広々表示） -->
+  <div class="scanner-card">
+    <div id="reader"></div>
+    <div class="scanner-overlay-guide"></div>
+    <div class="scanner-hint">枠内にQRコードをかざしてください</div>
+  </div>
+
+  <div id="display" class="display-box">-----</div>
+  <div id="statusMsg" class="status-msg">枠内にQRコードをかざしてください</div>
+</div>
+
+<!-- 下部固定テンキー -->
+<div class="bottom-keypad-container">
+  <div class="keypad">
+    <button class="btn-key" onclick="pressKey('1')">1</button>
+    <button class="btn-key" onclick="pressKey('2')">2</button>
+    <button class="btn-key" onclick="pressKey('3')">3</button>
+    <button class="btn-key" onclick="pressKey('4')">4</button>
+    <button class="btn-key" onclick="pressKey('5')">5</button>
+    <button class="btn-key" onclick="pressKey('6')">6</button>
+    <button class="btn-key" onclick="pressKey('7')">7</button>
+    <button class="btn-key" onclick="pressKey('8')">8</button>
+    <button class="btn-key" onclick="pressKey('9')">9</button>
+    <button class="btn-key btn-clear" onclick="clearKey()">C</button>
+    <button class="btn-key" onclick="pressKey('0')">0</button>
+    <button class="btn-key btn-bs" onclick="backspaceKey()">⌫</button>
+>>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
   </div>
 </div>
 
@@ -262,6 +510,7 @@
   let isLoading = false;
   let lastScannedCode = "";
   let scanCooldownTimer = null;
+<<<<<<< HEAD
   let html5QrCode = null;
   let isCameraRunning = false;
   let currentFacingMode = "user";
@@ -315,6 +564,37 @@
       osc2.start(audioCtx.currentTime + 0.07);
       osc2.stop(audioCtx.currentTime + 0.18);
     } catch (e) {}
+=======
+  let isKeypadMode = false;
+
+  function toggleKeypadMode(forceMode) {
+    if (typeof forceMode === 'boolean') {
+      isKeypadMode = forceMode;
+    } else {
+      isKeypadMode = !isKeypadMode;
+    }
+
+    const body = document.body;
+    const toggleBtn = document.getElementById('btnToggleMode');
+    const statusMsg = document.getElementById('statusMsg');
+
+    if (isKeypadMode) {
+      body.classList.add('mode-keypad');
+      if (toggleBtn) {
+        toggleBtn.classList.add('active-keypad');
+        toggleBtn.innerHTML = '<span>📷 QRスキャンに戻る</span>';
+      }
+      if (statusMsg) statusMsg.innerText = '5桁の受付番号を入力してください';
+    } else {
+      body.classList.remove('mode-keypad');
+      if (toggleBtn) {
+        toggleBtn.classList.remove('active-keypad');
+        toggleBtn.innerHTML = '<span>⌨️ 5桁番号で受付</span>';
+      }
+      if (statusMsg) statusMsg.innerText = '枠内にQRコードをかざしてください';
+      clearKey();
+    }
+>>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
   }
 
   function callGasApi(params, callbackSuccess, callbackFailure) {

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>富山市消防音楽隊 創立45周年記念演奏会 - Web事前受付＆当日入場管理システム 導入概要書</title>
+  
+  <!-- 高視認性Webユニバーサルデザインフォント（Noto Sans JP） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;900&display=swap" rel="stylesheet">
+  
+  <!-- QRコード生成ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #1e3a8a;       /* 深いネイビー（信頼感・公務） */
+      --primary-light: #eff6ff;
+      --accent-red: #dc2626;    /* 消防レッド */
+      --accent-gold: #d97706;   /* 45周年ゴールド */
+      --bg-main: #f8fafc;
+      --card-bg: #ffffff;
+      --text-dark: #0f172a;
+      --text-muted: #475569;
+      --border-color: #cbd5e1;
+      --success-green: #15803d;
+      --success-bg: #f0fdf4;
+      --danger-red: #b91c1c;
+      --danger-bg: #fef2f2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-dark);
+      line-height: 1.5;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      padding: 32px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* ヘッダーデザイン */
+    header {
+      border-bottom: 3px double var(--primary);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .org-subtitle {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-red);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    h1.doc-title {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+      line-height: 1.3;
+    }
+
+    .doc-meta-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .badge-status {
+      background: #dbeafe;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .badge-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .event-info-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      background: var(--primary-light);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-top: 16px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .info-icon {
+      font-size: 18px;
+    }
+
+    /* 各セクションのスタイル */
+    section {
+      margin-bottom: 32px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .sec-num {
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 900;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sec-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    /* セクション1：従来対比・メリット */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .comp-card {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .comp-card-header {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 10px 14px;
+      font-weight: 800;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .comp-card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13.5px;
+    }
+
+    .box-old {
+      background: #f8fafc;
+      border-left: 4px solid #94a3b8;
+      padding: 8px 10px;
+      border-radius: 4px;
+    }
+
+    .box-old-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+
+    .box-new {
+      background: var(--success-bg);
+      border-left: 4px solid var(--success-green);
+      padding: 8px 10px;
+      border-radius: 4px;
+    }
+
+    .box-new-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--success-green);
+      margin-bottom: 2px;
+    }
+
+    .effect-tag {
+      display: inline-block;
+      background: #dcfce7;
+      color: #14532d;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
+      border: 1px solid #bbf7d0;
+    }
+
+    /* セクション2：庁内協議クリア状況 */
+    .approval-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .approval-card {
+      border: 2px solid #bbf7d0;
+      background: #f0fdf4;
+      border-radius: 12px;
+      padding: 18px;
+      position: relative;
+    }
+
+    .approval-card.sys {
+      border-color: #bfdbfe;
+      background: #eff6ff;
+    }
+
+    .approval-badge {
+      position: absolute;
+      top: -12px;
+      right: 16px;
+      background: var(--success-green);
+      color: white;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .approval-card.sys .approval-badge {
+      background: var(--primary);
+    }
+
+    .app-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .app-desc {
+      font-size: 13.5px;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    .app-highlight {
+      font-weight: 800;
+      color: var(--danger-red);
+      background: #ffe4e6;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* セクション3：HARP比較テーブル */
+    .harp-table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+    }
+
+    table.harp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    table.harp-table th {
+      background: var(--primary);
+      color: white;
+      padding: 12px 14px;
+      font-weight: 700;
+    }
+
+    table.harp-table td {
+      padding: 14px;
+      border-top: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    table.harp-table tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    .badge-harp-ng {
+      color: var(--danger-red);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-new-ok {
+      color: var(--success-green);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .reason-text {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* セクション4：動作フロー＆実機体験 */
+    .flow-steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .flow-step-card {
+      background: #f8fafc;
+      border: 1px dashed var(--primary);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .step-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+
+    .step-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .qr-demo-section {
+      background: #fafaf9;
+      border: 2px solid var(--accent-gold);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .qr-demo-header {
+      font-size: 16px;
+      font-weight: 800;
+      color: #854d0e;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .qr-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    .qr-box {
+      margin: 10px 0;
+      padding: 6px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+
+    .qr-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .qr-subtext {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      min-height: 32px;
+    }
+
+    .btn-link {
+      display: inline-block;
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 0.2s;
+      word-break: break-all;
+    }
+
+    .btn-link:hover {
+      background: #1d4ed8;
+    }
+
+    /* セクション5：現場運用・安全対策 FAQ */
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .faq-card {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      background: white;
+    }
+
+    .faq-q {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .faq-q-icon {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .faq-a {
+      font-size: 13px;
+      color: var(--text-dark);
+      line-height: 1.5;
+      padding-left: 28px;
+    }
+
+    /* フッター */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .print-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .print-btn:hover {
+      background: #1e40af;
+    }
+
+    /* A4印刷最適化メディアクエリ */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      .comparison-grid, .approval-container, .flow-steps, .qr-grid, .faq-grid {
+        gap: 10px;
+      }
+      section {
+        margin-bottom: 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .comparison-grid, .approval-container, .flow-steps, .qr-grid, .faq-grid {
+        grid-template-columns: 1fr;
+      }
+      .container {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- 印刷用ボタン・操作ヘッダー -->
+    <div class="no-print" style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+      <button class="print-btn" onclick="window.print()">🖨️ A4資料として印刷 / PDF保存</button>
+    </div>
+
+    <!-- ドキュメントヘッダー -->
+    <header>
+      <div class="header-top">
+        <div>
+          <div class="org-subtitle">富山市消防音楽隊 創立45周年記念演奏会（令和9年12月23日開催予定）</div>
+          <h1 class="doc-title">事前受付＆当日入場管理システム 導入概要書</h1>
+        </div>
+        <div class="doc-meta-badge">
+          <span class="badge-status">庁内各課協議完了 / 実機デモ検証済</span>
+          <span class="badge-date">総務課説明添付用資料（作成: 2026年10月）</span>
+        </div>
+      </div>
+
+      <div class="event-info-bar">
+        <div class="info-item">
+          <span class="info-icon">📅</span> 開催予定: 令和9年12月23日（木）
+        </div>
+        <div class="info-item">
+          <span class="info-icon">👥</span> 会場定員: 2,000名（LockService自動厳守）
+        </div>
+        <div class="info-item">
+          <span class="info-icon">📱</span> 入場方式: スマホ5桁番号 / QRコード照合
+        </div>
+      </div>
+    </header>
+
+    <!-- 【1. 導入の目的と3大メリット】 -->
+    <section>
+      <div class="section-header">
+        <div class="sec-num">1</div>
+        <h2 class="sec-title">導入の目的・従来運用（35周年）との比較（3大メリット）</h2>
+      </div>
+
+      <div class="comparison-grid">
+        <!-- メリット1 -->
+        <div class="comp-card">
+          <div class="comp-card-header">① 集計・返送コスト削減</div>
+          <div class="comp-card-body">
+            <div class="box-old">
+              <div class="box-old-title">従来の課題 (35周年)</div>
+              FAX・往復はがきの紙管理と手集計。職員の集計・返送負担が膨大。
+            </div>
+            <div class="box-new">
+              <div class="box-new-title">本システムでの解決策</div>
+              Webフォーム入力により自動即時集計。はがき印刷・発送作業を全廃。
+            </div>
+            <div>
+              <span class="effect-tag">✨ 集計負担99%削減・公費削減</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- メリット2 -->
+        <div class="comp-card">
+          <div class="comp-card-header">② 個人情報リスクゼロ</div>
+          <div class="comp-card-body">
+            <div class="box-old">
+              <div class="box-old-title">従来の課題 (35周年)</div>
+              紙名簿管理に伴う「氏名・住所・電話番号」の漏洩リスク。
+            </div>
+            <div class="box-new">
+              <div class="box-new-title">本システムでの解決策</div>
+              特定個人情報は一切取得せず「ニックネーム・区分・人数」のみで管理。
+            </div>
+            <div>
+              <span class="effect-tag">🛡️ 個人情報保持リスク「完全ゼロ」</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- メリット3 -->
+        <div class="comp-card">
+          <div class="comp-card-header">③ 当日入場照合の高速化</div>
+          <div class="comp-card-body">
+            <div class="box-old">
+              <div class="box-old-title">従来の課題 (35周年)</div>
+              返信ハガキ持参・紙名簿の目視手めくり検索により長蛇の列が発生。
+            </div>
+            <div class="box-new">
+              <div class="box-new-title">本システムでの解決策</div>
+              テンキーによる5桁入力またはQRコード読み取りで「1人1秒照合」。
+            </div>
+            <div>
+              <span class="effect-tag">⚡ 開場時の行列を徹底解消</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 【2. 庁内各課との協議経過】 -->
+    <section>
+      <div class="section-header">
+        <div class="sec-num">2</div>
+        <h2 class="sec-title">庁内関係課（文書法務課・情報システム課）との事前協議・クリア状況</h2>
+      </div>
+
+      <div class="approval-container">
+        <!-- 文書法務課 -->
+        <div class="approval-card">
+          <span class="approval-badge">法務協議 完了</span>
+          <div class="app-title">
+            <span>⚖️ 文書法務課 との協議（個人情報について）</span>
+          </div>
+          <div class="app-desc">
+            氏名・住所・電話番号等は<span class="app-highlight">一切取得せず</span>、『ニックネーム』『区分』『人数』のみで管理するため、個人情報保護法上の「個人情報」に該当しない旨を確認済み。<br>
+            <strong>👉 個人情報保持リスクは完全ゼロとなります。</strong>
+          </div>
+        </div>
+
+        <!-- 情報システム課 -->
+        <div class="approval-card sys">
+          <span class="approval-badge">規程準拠 申請予定</span>
+          <div class="app-title">
+            <span>🔒 情報システム課 との協議（セキュリティについて）</span>
+          </div>
+          <div class="app-desc">
+            市で利用が認められている『Googleフォーム ＋ Google Apps Script (GAS※)』を活用する構成。市の『クラウドサービス利用規程』に基づき、統括情報セキュリティ責任者（企画管理部長）へ事前申請・許可を得て運用いたします。<br>
+            <span style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px; display: block;">※GAS＝Excelの「マクロ(VBA)」のGoogle版サービスです。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 改ページ指定 (A4印刷時に2ページ目へ綺麗に送る) -->
+    <div class="page-break"></div>
+
+    <!-- 【3. 富山市電子申請システム（HARP）を使わない理由】 -->
+    <section style="margin-top: 16px;">
+      <div class="section-header">
+        <div class="sec-num">3</div>
+        <h2 class="sec-title">「富山市電子申請システム（HARPフォーム）」を採用しない理由（致命的課題の明確化）</h2>
+      </div>
+
+      <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 12px;">
+        ※「なぜ市の標準電子申請機能（HARP）を使わないのか」という点ですが、2,000名規模の現場リアルタイム運用において以下の3つの致命的課題があるため除外しております。
+      </p>
+
+      <div class="harp-table-wrapper">
+        <table class="harp-table">
+          <thead>
+            <tr>
+              <th style="width: 28%;">比較・確認ポイント</th>
+              <th style="width: 33%;">市標準：HARPフォーム (電子申請)</th>
+              <th style="width: 39%;">本開発システム (Google + GAS)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. 受付番号・QRの<br>自動発行・返信機能</strong></td>
+              <td>
+                <span class="badge-harp-ng">❌ 不可（機能不足）</span>
+                <div class="reason-text">申請受付のみに特化した機能のため、申込完了時に「5桁受付番号」や「照合用QRコード」を自動発行できません。</div>
+              </td>
+              <td>
+                <span class="badge-new-ok">⭕ 即時自動発行</span>
+                <div class="reason-text">申込送信後、画面上に即座に「5桁のユニーク受付番号」と「照合用QRコード」を自動生成して提示します。</div>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>2. 当日現場での<br>『即座受付照合』機能</strong></td>
+              <td>
+                <span class="badge-harp-ng">❌ 不可（現場混雑）</span>
+                <div class="reason-text">QRや番号をかざして即座に受付完了にする機能がありません。結局CSVを出力して紙名簿をめくって探すアナログ運用となり、<strong>1時間以上の長蛇の列が発生</strong>します。</div>
+              </td>
+              <td>
+                <span class="badge-new-ok">⭕ 1人1秒の高速照合</span>
+                <div class="reason-text">受付専用画面（スマホ/タブレット）のカメラでQRをかざすか、5桁番号をタップするだけで「照合・受付完了」となります。</div>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>3. リアルタイムな<br>入場者数・定員管理</strong></td>
+              <td>
+                <span class="badge-harp-ng">❌ 不可（安全管理リスク）</span>
+                <div class="reason-text">基本構成がLGWAN環境での閲覧のため、「誰が入場したか（入場フラグ）」が現場で更新されず、現在の場内滞在人数が把握できません。</div>
+              </td>
+              <td>
+                <span class="badge-new-ok">⭕ リアルタイム自動把握</span>
+                <div class="reason-text">受付データがリアルタイムで集計され、「現在会場内に何名いて、残枠が何名か」を安全管理担当者が常時モニタリング可能です。</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 【4. システムの基本動作フロー＆実機体験】 -->
+    <section>
+      <div class="section-header">
+        <div class="sec-num">4</div>
+        <h2 class="sec-title">システムの基本動作フロー ＆ 実機体験・確認コーナー</h2>
+      </div>
+
+      <!-- 3ステップフロー -->
+      <div class="flow-steps">
+        <div class="flow-step-card">
+          <div class="step-number">Step 1</div>
+          <div class="step-title">事前お申し込み</div>
+          <div class="step-desc">来場者がスマホから「区分・ニックネーム・人数」を入力して送信</div>
+        </div>
+
+        <div class="flow-step-card">
+          <div class="step-number">Step 2</div>
+          <div class="step-title">5桁番号・QR発行</div>
+          <div class="step-desc">完了画面に即座にユニークな「5桁受付番号」と「照合QR」を表示</div>
+        </div>
+
+        <div class="flow-step-card">
+          <div class="step-number">Step 3</div>
+          <div class="step-title">当日の受付照合</div>
+          <div class="step-desc">受付スタッフが5桁を入力またはQR読み取り ➔ 即確認・入場完了！</div>
+        </div>
+      </div>
+
+      <!-- ★ QRコード実機体験コーナー -->
+      <div class="qr-demo-section">
+        <div class="qr-demo-header">
+          <span>★ スマホ実機体験 ＆ データ確認コーナー (QRコード / クリック可能URL)</span>
+        </div>
+
+        <div class="qr-grid">
+          <!-- ① 申込フォーム -->
+          <div class="qr-card">
+            <div class="qr-label">① 申込フォーム画面</div>
+            <div class="qr-subtext">入力して送信すると「5桁の受付番号」が即座に発行されます。</div>
+            <div class="qr-box" id="qrcode-form"></div>
+            <a href="https://script.google.com/macros/s/AKfycbyDQ3h_Vx72YPTgECxYYMUFUTtyQdgFsGtBlhSZrKReuKXFd3yDmcf2N15FnzgE8hgj4Q/exec" target="_blank" class="btn-link">申込画面を開く</a>
+          </div>
+
+          <!-- ② 当日受付照合画面 -->
+          <div class="qr-card">
+            <div class="qr-label">② 当日受付 照合画面</div>
+            <div class="qr-subtext">5桁を入力すると名前・人数が表示され「確定」で完了します。</div>
+            <div class="qr-box" id="qrcode-admin"></div>
+            <a href="https://script.google.com/macros/s/AKfycbyDQ3h_Vx72YPTgECxYYMUFUTtyQdgFsGtBlhSZrKReuKXFd3yDmcf2N15FnzgE8hgj4Q/exec?p=admin&pass=45th" target="_blank" class="btn-link">照合画面を開く (pass=45th)</a>
+          </div>
+
+          <!-- ③ 集計スプレッドシート -->
+          <div class="qr-card">
+            <div class="qr-label">③ 集計スプレッドシート</div>
+            <div class="qr-subtext">申込・受付結果がリアルタイムに反映されるシートを確認できます。</div>
+            <div class="qr-box" id="qrcode-sheet"></div>
+            <a href="https://docs.google.com/spreadsheets/d/1FKjz7m3-dXuezxjvivGlHxkqZ0_p_Q5a7H427frmvaM/edit?usp=sharing" target="_blank" class="btn-link">スプレッドシートを開く</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 【5. 現場運用・安全通信対策・FAQ】 -->
+    <section>
+      <div class="section-header">
+        <div class="sec-num">5</div>
+        <h2 class="sec-title">現場運用・安全通信対策 ＆ よくある質問（FAQ）</h2>
+      </div>
+
+      <div class="faq-grid">
+        <div class="faq-card">
+          <div class="faq-q">
+            <span class="faq-q-icon">通信</span>
+            当日の会場Wi-Fi混雑への対策は？
+          </div>
+          <div class="faq-a">
+            会場Wi-Fiに依存せず、事務局側で<strong>受付専用のポケットWi-Fiを1台レンタル</strong>して安定したネット環境を構築します。来場者の通信混雑の影響を一切受けずスムーズに受付できます。
+          </div>
+        </div>
+
+        <div class="faq-card">
+          <div class="faq-q">
+            <span class="faq-q-icon">対応</span>
+            受付番号やスマホを忘れた来場者がいた場合は？
+          </div>
+          <div class="faq-a">
+            受付照合画面で<strong>「ニックネーム（お名前）」検索が可能</strong>です。スマホをお持ちでない方や番号忘れの方もその場で即座に検索して入場完了できます。
+          </div>
+        </div>
+
+        <div class="faq-card">
+          <div class="faq-q">
+            <span class="faq-q-icon">変更</span>
+            人数が急遽変更になった場合の対応は？
+          </div>
+          <div class="faq-a">
+            受付照合画面上で、その場で<strong>「2名 ➔ 1名」等にタップ変更して確定可能</strong>です。柔軟な現場運用に対応します。
+          </div>
+        </div>
+
+        <div class="faq-card">
+          <div class="faq-q">
+            <span class="faq-q-icon">障害</span>
+            万が一の通信不具合・障害発生時の備えは？
+          </div>
+          <div class="faq-a">
+            事前にデータをCSVダウンロードし、<strong>オフライン参照できる二重のバックアップ対策</strong>を講じております。回線が途切れても現場で受付業務を止めません。
+          </div>
+        </div>
+
+        <div class="faq-card">
+          <div class="faq-q">
+            <span class="faq-q-icon">安全</span>
+            定員2,000名の超過防止対策は？
+          </div>
+          <div class="faq-a">
+            <strong>同時アクセス保護（LockService）</strong>による排他制御を実装。2,000名に達した瞬間に即座に自動受付終了し、定員超えをプログラムレベルで厳守します。
+          </div>
+        </div>
+
+        <div class="faq-card">
+          <div class="faq-q">
+            <span class="faq-q-icon">辞退</span>
+            申込者のキャンセル対応は？
+          </div>
+          <div class="faq-a">
+            <strong>自己キャンセル機能</strong>を搭載。申込完了画面からご自身でキャンセル可能で、空いた枠は即座に2,000名の定員枠へ自動還元されます。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- フッター -->
+    <footer>
+      <div>富山市消防音楽隊 創立45周年記念演奏会 プロジェクトチーム</div>
+      <div>発行日: 令和8年8月（最終更新: 令和8年10月）</div>
+    </footer>
+
+  </div>
+
+  <script>
+    // QRコード自動生成
+    const urlForm = "https://script.google.com/macros/s/AKfycbyDQ3h_Vx72YPTgECxYYMUFUTtyQdgFsGtBlhSZrKReuKXFd3yDmcf2N15FnzgE8hgj4Q/exec";
+    const urlAdmin = "https://script.google.com/macros/s/AKfycbyDQ3h_Vx72YPTgECxYYMUFUTtyQdgFsGtBlhSZrKReuKXFd3yDmcf2N15FnzgE8hgj4Q/exec?p=admin&pass=45th";
+    const urlSheet = "https://docs.google.com/spreadsheets/d/1FKjz7m3-dXuezxjvivGlHxkqZ0_p_Q5a7H427frmvaM/edit?usp=sharing";
+
+    function generateQRs() {
+      new QRCode(document.getElementById("qrcode-form"), {
+        text: urlForm,
+        width: 100,
+        height: 100,
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      new QRCode(document.getElementById("qrcode-admin"), {
+        text: urlAdmin,
+        width: 100,
+        height: 100,
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      new QRCode(document.getElementById("qrcode-sheet"), {
+        text: urlSheet,
+        width: 100,
+        height: 100,
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    // 読み込み完了後に実行
+    window.addEventListener("DOMContentLoaded", generateQRs);
+  </script>
+</body>
+</html>

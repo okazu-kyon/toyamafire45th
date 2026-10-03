@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>連続スキャンテスト用 QRコード一覧 (30件)</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+    
+    * {
+      box-sizing: border-box;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f4f1ea;
+      color: #333;
+    }
+
+    /* 印刷時は背景やヘッダーを非表示にしてA4に合わせる */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .page-break {
+        page-break-after: always;
+      }
+    }
+
+    .header-bar {
+      max-width: 960px;
+      margin: 0 auto 20px auto;
+      background: #ffffff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #8b7355;
+    }
+
+    .btn-print {
+      background: #8b7355;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-print:hover {
+      background: #6e5a42;
+    }
+
+    .qr-grid-container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    /* A4用紙用グリッド：3列×5行（1ページ15件、合計2ページ30件） */
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .qr-card {
+      border: 2px solid #e0d8cc;
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+      background: #faf8f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-code-box {
+      background: #ffffff;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .user-code {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #111;
+      margin-bottom: 2px;
+    }
+
+    .user-meta {
+      font-size: 12px;
+      color: #666;
+      font-weight: 700;
+    }
+
+    .badge-cat {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 6px;
+      background: #e8e0d0;
+      border-radius: 4px;
+      margin-top: 2px;
+      color: #444;
+    }
+
+    .page-title-print {
+      display: none;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #444;
+    }
+
+    @media print {
+      .page-title-print {
+        display: block;
+      }
+      .qr-grid-container {
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .qr-grid {
+        gap: 10px;
+      }
+      .qr-card {
+        padding: 8px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 操作用ヘッダー（印刷時には非表示） -->
+  <div class="header-bar no-print">
+    <div>
+      <div class="header-title">連続スキャンテスト用 QRコード一覧</div>
+      <div style="font-size:13px; color:#666; margin-top:4px;">
+        テストデータ: 90001 〜 90030（全30件） | A4印刷・画面連続スキャンテスト用
+      </div>
+    </div>
+    <button class="btn-print" onclick="window.print()">🖨️ A4サイズで印刷する</button>
+  </div>
+
+  <!-- QRコード一覧エリア (Page 1: 15件) -->
+  <div class="qr-grid-container">
+    <div class="page-title-print">連続スキャンテスト用 QRコード一覧 (1 / 2)</div>
+    <div class="qr-grid" id="gridPage1"></div>
+  </div>
+
+  <div class="page-break" style="height: 30px;"></div>
+
+  <!-- QRコード一覧エリア (Page 2: 15件) -->
+  <div class="qr-grid-container" style="margin-top: 20px;">
+    <div class="page-title-print">連続スキャンテスト用 QRコード一覧 (2 / 2)</div>
+    <div class="qr-grid" id="gridPage2"></div>
+  </div>
+
+  <script>
+    // テストデータ30件の生成
+    const categories = ['一般', '消防職員', '消防団員', '関係者'];
+    const testData = [];
+
+    for (let i = 1; i <= 30; i++) {
+      const numStr = String(i).padStart(3, '0');
+      const code = '90' + numStr; // 90001 〜 90030 (5桁の数字)
+      const category = categories[(i - 1) % categories.length];
+      const nickname = 'テスト太郎_' + numStr;
+      const count = (i % 3) + 1; // 1〜3名
+      testData.push({ code, category, nickname, count });
+    }
+
+
+    // カード要素の動的生成
+    function createCard(item) {
+      const card = document.createElement('div');
+      card.className = 'qr-card';
+      
+      const qrBox = document.createElement('div');
+      qrBox.className = 'qr-code-box';
+      card.appendChild(qrBox);
+
+      // QRCode生成
+      new QRCode(qrBox, {
+        text: item.code,
+        width: 110,
+        height: 110,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      const codeEl = document.createElement('div');
+      codeEl.className = 'user-code';
+      codeEl.innerText = item.code;
+      card.appendChild(codeEl);
+
+      const metaEl = document.createElement('div');
+      metaEl.className = 'user-meta';
+      metaEl.innerText = `${item.nickname} (${item.count}名)`;
+      card.appendChild(metaEl);
+
+      const catEl = document.createElement('div');
+      catEl.className = 'badge-cat';
+      catEl.innerText = item.category;
+      card.appendChild(catEl);
+
+      return card;
+    }
+
+    const grid1 = document.getElementById('gridPage1');
+    const grid2 = document.getElementById('gridPage2');
+
+    testData.forEach((item, index) => {
+      const card = createCard(item);
+      if (index < 15) {
+        grid1.appendChild(card);
+      } else {
+        grid2.appendChild(card);
+      }
+    });
+  </script>
+</body>
+</html>

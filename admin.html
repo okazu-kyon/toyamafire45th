@@ -3,23 +3,28 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- 高視認性Webユニバーサルデザインフォント（Noto Sans JP）の読み込み -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --primary-color: #8b7355;
-      --accent-color: #c5a059;
+      --accent-color: #b38636;
       --bg-color: #f7f5f0;
       --card-bg: #ffffff;
-      --text-main: #333333;
-      --text-sub: #666666;
-      --danger-color: #8b0000;
-      --success-color: #2e7d32;
+      --text-main: #111111;
+      --text-sub: #444444;
+      --danger-color: #a00000;
+      --success-color: #1e7e34;
       --warning-color: #d97706;
-      --border-color: #e5dec9;
+      --border-color: #d1c7b7;
     }
 
     * {
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
       user-select: none;
     }
 
@@ -27,13 +32,14 @@
       margin: 0;
       padding: 0;
       background: var(--bg-color);
-      background-image: radial-gradient(#e5dec9 1.5px, transparent 1.5px);
+      background-image: radial-gradient(#d1c7b7 1.5px, transparent 1.5px);
       background-size: 18px 18px;
       height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       overflow: hidden;
+      color: var(--text-main);
     }
 
     .top-section {
@@ -47,10 +53,10 @@
     }
 
     .admin-title {
-      font-size: 13px;
-      font-weight: bold;
-      color: var(--accent-color);
-      letter-spacing: 2px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary-color);
+      letter-spacing: 1.5px;
       margin-bottom: 8px;
       text-transform: uppercase;
     }
