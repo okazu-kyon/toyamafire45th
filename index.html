@@ -514,9 +514,9 @@
     if (chk) {
       isSmoothMode = chk.checked;
       if (isSmoothMode) {
-        showAutoToast("⚡ スムーズモード ON<br><span style='font-size:12px;'>1名様は自動受付完了します</span>", 1500);
+        showAutoToast("⚡ 爆速スムーズモード ON<br><span style='font-size:12px;'>ノンストップ自動照合・連続受付</span>", 1500);
       } else {
-        showAutoToast("💬 スムーズモード OFF<br><span style='font-size:12px;'>毎回確認ダイアログを表示します</span>", 1500);
+        showAutoToast("💬 通常確認モード ON<br><span style='font-size:12px;'>確認ダイアログを表示します</span>", 1500);
       }
     }
   }
@@ -626,35 +626,69 @@
     }
   }
 
+  // 照合検索処理（スムーズモード時：ノンストップ・バックグラウンド自動受付）
   function searchCode() {
-    if (isLoading || !inputCode) return;
-    setLock(true);
-    document.getElementById('statusMsg').innerText = "照合中 (" + inputCode + ")...";
+    if (!inputCode) return;
+    const targetCode = inputCode;
+    inputCode = "";
+
+    if (!isSmoothMode) {
+      setLock(true);
+      document.getElementById('statusMsg').innerText = "照合中 (" + targetCode + ")...";
+    } else {
+      showAutoToast("🔍 照合中: " + targetCode + "...", 800);
+    }
 
     callGasApi(
-      { action: 'search', code: inputCode },
+      { action: 'search', code: targetCode },
       function(res) {
-        setLock(false);
+        if (!isSmoothMode) setLock(false);
         if (res && res.success) {
-          playBeepSound();
           currentData = res;
-
-          // スムーズモード判定: 未受付かつ1名様の場合は自動受付完了
-          if (isSmoothMode && res.status !== "キャンセル" && res.status !== "受付済" && parseInt(res.count, 10) === 1) {
-            confirmCheckIn(1);
+          
+          if (isSmoothMode) {
+            if (res.status === "未受付") {
+              // 申込人数の確認をスキップし、バックグラウンドで自動即時チェックイン
+              confirmCheckInAuto(res);
+            } else if (res.status === "受付済") {
+              showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（受付完了済み: " + res.actualCount + "名）", 1800, true);
+            } else if (res.status === "キャンセル") {
+              showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 1800, true);
+            }
           } else {
             showResultModal(res);
           }
+
         } else {
-          document.getElementById('statusMsg').innerText = "❌ 該当なし: " + inputCode;
-          showAutoToast("❌ 該当なし: " + inputCode, 2000);
-          setTimeout(clearKey, 1500);
+          if (isSmoothMode) {
+            showAutoToast("⚠️ 番号: " + targetCode + "<br>該当データがありません", 1800, true);
+          } else {
+            document.getElementById('statusMsg').innerText = "❌ 該当なし: " + targetCode;
+            showAutoToast("❌ 番号: " + targetCode + "<br>該当データがありません", 1800, true);
+            setTimeout(clearKey, 1500);
+          }
         }
       },
       function(err) {
-        setLock(false);
-        document.getElementById('statusMsg').innerText = "通信エラー発生";
-        showAutoToast("⚠️ 通信エラーが発生しました", 2000);
+        if (!isSmoothMode) setLock(false);
+        showAutoToast("⚠️ 通信エラーが発生しました", 1500, true);
+      }
+    );
+  }
+
+  function confirmCheckInAuto(data) {
+    callGasApi(
+      { action: 'checkin', code: data.code, count: data.count },
+      function(res) {
+        if (res && res.success) {
+          showAutoToast("✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！", 1500);
+          if (isKeypadMode) clearKey();
+        } else {
+          showAutoToast("❌ 受付失敗: " + ((res && res.message) || ""), 1800, true);
+        }
+      },
+      function(err) {
+        showAutoToast("❌ 通信エラー", 1500, true);
       }
     );
   }
