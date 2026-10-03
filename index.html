@@ -5,6 +5,7 @@
   <base target="_top">
   <title>受付用 QR照合システム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- QRスキャナーライブラリ (安定動作設定) -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <!-- 高視認性Webユニバーサルデザインフォント（Noto Sans JP）の読み込み -->
@@ -15,6 +16,7 @@
   <style>
     :root {
       --primary-color: #8b7355;
+      --primary-hover: #6d5a42;
       --accent-color: #b38636;
       --bg-color: #f7f5f0;
       --card-bg: #ffffff;
@@ -55,7 +57,7 @@
     /* 上部エリア（カメラ＋ディスプレイ） */
     .top-section {
       width: 100%;
-      max-width: 440px;
+      max-width: 480px;
       margin: 0 auto;
       padding: 8px 12px 0 12px;
       display: flex;
@@ -68,19 +70,22 @@
     /* ヘッダー周りのスマート化 */
     .app-header {
       width: 100%;
-      padding: 8px 12px;
+      padding: 6px 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--card-bg);
-      border-bottom: 1px solid var(--border-color);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin-bottom: 8px;
       flex-shrink: 0;
       z-index: 10;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     }
 
     .admin-title {
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 900;
       color: var(--primary-color);
       letter-spacing: 0.5px;
       white-space: nowrap;
@@ -90,12 +95,11 @@
       display: flex;
       gap: 6px;
       align-items: center;
-      flex-wrap: nowrap;
     }
 
     /* モード切替ボタン (画面右上) */
     .btn-mode-toggle {
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
       background: var(--primary-color);
       color: #ffffff;
@@ -108,7 +112,6 @@
       gap: 4px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       transition: all 0.2s ease;
-      user-select: none;
       white-space: nowrap;
     }
     .btn-mode-toggle:active {
@@ -119,34 +122,38 @@
       border-color: #ffffff;
     }
 
+    .btn-switch-camera {
+      font-size: 11px;
+      background: #ffffff;
+      color: var(--primary-color);
+      border: 1px solid var(--border-color);
+      padding: 4px 8px;
+      border-radius: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
     /* カメラプレビュー窓（デフォルトは画面いっぱい広々表示） */
     .scanner-card {
       width: 100%;
       flex: 1;
-      min-height: 280px;
-      max-height: 420px;
+      min-height: 260px;
+      max-height: 440px;
       background: #1a1a1a;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
+      margin-bottom: 6px;
       position: relative;
       border: 2px solid var(--border-color);
       box-shadow: 0 4px 16px rgba(0,0,0,0.12);
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* テンキーモード時のカメラコンパクト化 & テンキー表示 */
-    body.mode-keypad .scanner-card {
-      min-height: 110px;
-      max-height: 140px;
-    }
-
     #reader {
       width: 100% !important;
       height: 100% !important;
       border: none !important;
-      position: absolute;
-      top: 0;
-      left: 0;
     }
     #reader video {
       width: 100% !important;
@@ -159,38 +166,31 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 220px;
-      height: 220px;
-      border: 2px dashed rgba(255,255,255,0.9);
-      border-radius: 16px;
+      width: 150px;
+      height: 150px;
+      border: 2px dashed rgba(255,255,255,0.85);
+      border-radius: 14px;
       pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
     }
 
     .scanner-hint {
       position: absolute;
-      bottom: 24px;
+      bottom: 8px;
       left: 0;
       right: 0;
       text-align: center;
       color: #ffffff;
       font-size: 13px;
-      font-weight: bold;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+      font-weight: 700;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
       pointer-events: none;
     }
 
-    /* モーダル表示 */
-=======
-      border: 2px solid var(--border-color);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* テンキーモード時のカメラコンパクト化 & テンキー表示 */
+    /* テンキーモード時のカメラコンパクト化 */
     body.mode-keypad .scanner-card {
-      min-height: 110px;
-      max-height: 140px;
+      min-height: 100px;
+      max-height: 130px;
     }
 
     /* ディスプレイ表示 */
@@ -203,7 +203,7 @@
       background: var(--card-bg);
       border-radius: 8px;
       margin-bottom: 4px;
-      height: 50px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -219,7 +219,7 @@
     }
 
     .status-msg {
-      font-size: 14px;
+      font-size: 13.5px;
       color: var(--text-sub);
       margin-bottom: 4px;
       height: 20px;
@@ -233,7 +233,7 @@
       width: 100%;
       background: var(--card-bg);
       border-top: 1px solid var(--border-color);
-      padding: 6px 14px 18px 14px;
+      padding: 8px 14px 18px 14px;
       box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.04);
       display: none;
     }
@@ -271,10 +271,7 @@
     .btn-clear { background: #fffafa; border-color: #f2e3e3; color: var(--danger-color); font-size: 20px; font-weight: 700; }
     .btn-bs { background: #fffdf5; border-color: var(--border-color); color: var(--warning-color); font-size: 20px; font-weight: 700; }
 
-    /* ==================================== */
-    /* 照合結果ポップアップシート (画面下からスッと出現) */
-    /* ==================================== */
->>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
+    /* 照合結果ポップアップシート */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -283,7 +280,9 @@
       display: none;
       align-items: flex-end;
       justify-content: center;
+      backdrop-filter: blur(2px);
     }
+
     .modal-sheet {
       width: 100%;
       max-width: 440px;
@@ -291,20 +290,6 @@
       border-radius: 18px 18px 0 0;
       padding: 18px 20px 24px 20px;
       box-shadow: 0 -8px 25px rgba(0,0,0,0.25);
-<<<<<<< HEAD
-      border-top: 2px solid var(--accent-color);
-    }
-    .modal-badge { font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 4px; }
-    .modal-name { font-size: 23px; font-weight: bold; color: var(--primary-color); text-align: center; margin: 2px 0 6px 0; }
-    .modal-detail { font-size: 15px; color: var(--text-main); font-weight: bold; text-align: center; margin-bottom: 12px; }
-    .btn-confirm-large { width: 100%; padding: 14px; font-size: 18px; font-weight: bold; color: white; background: var(--success-color); border: none; border-radius: 8px; cursor: pointer; margin-bottom: 10px; }
-    .btn-modal-close { width: 100%; padding: 10px; font-size: 13px; font-weight: bold; color: var(--text-sub); background: #f0ebe0; border: none; border-radius: 6px; cursor: pointer; }
-    .sub-change-title { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; font-weight: bold; }
-    .shortcut-grid { display: flex; gap: 6px; margin-bottom: 10px; }
-    .btn-short { flex: 1; padding: 8px 0; font-size: 13px; font-weight: bold; background: #ffffff; border: 1.5px solid var(--primary-color); color: var(--primary-color); border-radius: 6px; cursor: pointer; }
-    
-    /* トーストポップアップ：ヘッダー直下（最上部）へ配置変更 */
-=======
       animation: slideUp 0.18s ease-out;
       border-top: 3px solid var(--accent-color);
     }
@@ -378,71 +363,50 @@
     }
     .btn-short:active { background: var(--primary-color); color: white; }
 
-    /* トースト通知 */
->>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
+    /* トーストポップアップ */
     .toast-popup {
       position: fixed;
       top: 50px;
       left: 50%;
-<<<<<<< HEAD
       transform: translateX(-50%);
-      background: rgba(139, 115, 85, 0.95);
-      color: #ffffff;
-      padding: 10px 18px;
-      border-radius: 8px;
-      border: 1px solid var(--accent-color);
-      font-size: 14px;
-      font-weight: bold;
-=======
-      transform: translate(-50%, -50%);
       background: rgba(139, 115, 85, 0.98);
       color: #ffffff;
-      padding: 18px 28px;
+      padding: 12px 24px;
       border-radius: 10px;
       border: 1px solid var(--accent-color);
-      font-size: 19px;
+      font-size: 16px;
       font-weight: 700;
->>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
       text-align: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
       z-index: 2000;
       min-width: 260px;
-<<<<<<< HEAD
-      max-width: 90%;
-      pointer-events: none;
-      opacity: 1;
-      transition: opacity 0.3s ease;
-=======
       line-height: 1.4;
       animation: popIn 0.15s ease-out;
->>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
     }
-    .toast-warning {
-      background: rgba(180, 40, 40, 0.95) !important;
-      border-color: #ff8888 !important;
+    @keyframes popIn {
+      from { opacity: 0; transform: translate(-50%, -20%); }
+      to { opacity: 1; transform: translate(-50%, 0); }
     }
-    .loading-locked { pointer-events: none !important; opacity: 0.5; }
+
+    .loading-locked {
+      pointer-events: none !important;
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
   </style>
 </head>
 <body>
 
-<<<<<<< HEAD
-<div class="app-header">
-  <div class="admin-title">受付QR照合</div>
-  <div class="header-actions">
-    <label class="smooth-mode-label">
-      <input type="checkbox" id="chkSmoothMode" checked onchange="toggleSmoothMode()"> スムーズ
-    </label>
-    <div class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 インカメラ</div>
-    <div class="status-badge" id="cameraStatus" onclick="restartCamera()" title="タップしてカメラを再起動">📷 起動中</div>
-=======
-<!-- 上部固定エリア（カメラ窓＋ディスプレイ） -->
+<!-- 上部エリア（カメラ＋ディスプレイ） -->
 <div class="top-section">
   <div class="app-header">
     <div class="admin-title">受付用 照合システム</div>
-    <button type="button" id="btnToggleMode" class="btn-mode-toggle" onclick="toggleKeypadMode()">
-      <span>⌨️ 5桁番号で受付</span>
-    </button>
+    <div class="header-actions">
+      <button type="button" class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 カメラ切替</button>
+      <button type="button" id="btnToggleMode" class="btn-mode-toggle" onclick="toggleKeypadMode()">
+        <span>⌨️ 5桁番号で受付</span>
+      </button>
+    </div>
   </div>
 
   <!-- 常時カメラ読み取り窓（スキャンモード時は画面いっぱいに広々表示） -->
@@ -471,16 +435,10 @@
     <button class="btn-key btn-clear" onclick="clearKey()">C</button>
     <button class="btn-key" onclick="pressKey('0')">0</button>
     <button class="btn-key btn-bs" onclick="backspaceKey()">⌫</button>
->>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
   </div>
 </div>
 
-<div class="scanner-card">
-  <div id="reader"></div>
-  <div class="scanner-overlay-guide"></div>
-  <div class="scanner-hint">枠内にQRコードをかざしてください</div>
-</div>
-
+<!-- 照合結果ポップアップシート -->
 <div id="resultModal" class="modal-overlay">
   <div class="modal-sheet">
     <div id="modalBadge" class="modal-badge" style="color:var(--success-color);">【未受付】</div>
@@ -510,62 +468,9 @@
   let isLoading = false;
   let lastScannedCode = "";
   let scanCooldownTimer = null;
-<<<<<<< HEAD
-  let html5QrCode = null;
-  let isCameraRunning = false;
-  let currentFacingMode = "user";
-  let isSmoothMode = true;
-  let toastTimer = null;
-
-  let lastTouchEnd = 0;
-  document.addEventListener('touchend', function(event) {
-    const now = (new Date()).getTime();
-    if (now - lastTouchEnd <= 300) {
-      event.preventDefault();
-    }
-    lastTouchEnd = now;
-  }, { passive: false });
-
-  function toggleSmoothMode() {
-    isSmoothMode = document.getElementById('chkSmoothMode').checked;
-    if (isSmoothMode) {
-      showAutoToast("⚡ 爆速スムーズモード ON", 1200);
-    }
-  }
-
-  function playBeepSound() {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      
-      // 1音目（ド：C6 = 1046.5Hz）
-      const osc1 = audioCtx.createOscillator();
-      const gain1 = audioCtx.createGain();
-      osc1.type = 'sine'; // 芯のある澄んだ高音
-      osc1.frequency.setValueAtTime(1046.5, audioCtx.currentTime);
-      gain1.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-      osc1.connect(gain1);
-      gain1.connect(audioCtx.destination);
-      osc1.start();
-      osc1.stop(audioCtx.currentTime + 0.08);
-
-      // 2音目（ソ：G6 = 1567.98Hz）
-      const osc2 = audioCtx.createOscillator();
-      const gain2 = audioCtx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(1567.98, audioCtx.currentTime + 0.07);
-      gain2.gain.setValueAtTime(0.25, audioCtx.currentTime + 0.07);
-      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
-      osc2.connect(gain2);
-      gain2.connect(audioCtx.destination);
-      osc2.start(audioCtx.currentTime + 0.07);
-      osc2.stop(audioCtx.currentTime + 0.18);
-    } catch (e) {}
-=======
   let isKeypadMode = false;
+  let currentFacingMode = "environment";
+  let html5QrCode = null;
 
   function toggleKeypadMode(forceMode) {
     if (typeof forceMode === 'boolean') {
@@ -594,9 +499,9 @@
       if (statusMsg) statusMsg.innerText = '枠内にQRコードをかざしてください';
       clearKey();
     }
->>>>>>> 9ed0439 (Update index.html (QR checker mode toggle), form.html (direct UI & history accordion), summary.html for General Affairs presentation)
   }
 
+  // JSONPでGAS APIを呼び出す関数（CORS制約を完全回避）
   function callGasApi(params, callbackSuccess, callbackFailure) {
     const callbackName = 'gasCallback_' + Math.floor(Math.random() * 1000000);
     params.callback = callbackName;
@@ -624,89 +529,89 @@
 
   function setLock(lockState) {
     isLoading = lockState;
+    const keypadContainer = document.querySelector('.bottom-keypad-container');
     const modalAction = document.getElementById('modalActionArea');
     if (lockState) {
+      if (keypadContainer) keypadContainer.classList.add('loading-locked');
       if (modalAction) modalAction.classList.add('loading-locked');
     } else {
+      if (keypadContainer) keypadContainer.classList.remove('loading-locked');
       if (modalAction) modalAction.classList.remove('loading-locked');
     }
   }
 
-  function searchCode() {
-    const targetCode = inputCode;
+  function updateDisplay() {
+    const disp = document.getElementById('display');
+    if (disp) disp.innerText = inputCode ? inputCode.padEnd(5, '-') : "-----";
     
-    if (!isSmoothMode) {
-      setLock(true);
-      showAutoToast("🔍 照会中...", 1000);
-    } else {
-      showAutoToast("⚡ 通信照会中...", 1000);
-      setTimeout(function() {
-        if (inputCode === targetCode) {
-          inputCode = "";
-        }
-      }, 300);
+    if (inputCode.length === 5) {
+      searchCode();
     }
+  }
+
+  function pressKey(num) {
+    if (isLoading) return;
+    if (!isKeypadMode) {
+      toggleKeypadMode(true);
+    }
+    if (inputCode.length < 5) {
+      inputCode += num;
+      updateDisplay();
+    }
+  }
+
+  function clearKey() {
+    inputCode = "";
+    updateDisplay();
+    document.getElementById('statusMsg').innerText = isKeypadMode ? '5桁の受付番号を入力してください' : '枠内にQRコードをかざしてください';
+  }
+
+  function backspaceKey() {
+    if (isLoading) return;
+    if (inputCode.length > 0) {
+      inputCode = inputCode.slice(0, -1);
+      updateDisplay();
+    }
+  }
+
+  function searchCode() {
+    if (isLoading || !inputCode) return;
+    setLock(true);
+    document.getElementById('statusMsg').innerText = "照合中 (" + inputCode + ")...";
 
     callGasApi(
-      { action: 'search', code: targetCode },
+      { action: 'search', code: inputCode },
       function(res) {
-        if (!isSmoothMode) setLock(false);
-
+        setLock(false);
         if (res && res.success) {
+          playBeepSound();
           currentData = res;
-
-          if (isSmoothMode) {
-            if (res.status === "未受付") {
-              confirmCheckInAuto(res);
-            } else if (res.status === "受付済") {
-              showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（すでに受付完了済みです）", 1500, true);
-            } else if (res.status === "キャンセル") {
-              showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 1500, true);
-            }
-          } else {
-            openResultModal(res);
-          }
-
+          showResultModal(res);
         } else {
-          if (isSmoothMode) {
-            showAutoToast("⚠️ 番号: " + targetCode + "<br>該当データがありません", 1500, true);
-          } else {
-            showAutoToast("❌ 番号: " + targetCode + "<br>該当データがありません", 1500, true);
-          }
+          document.getElementById('statusMsg').innerText = "❌ 該当なし: " + inputCode;
+          showAutoToast("❌ 該当なし: " + inputCode, 2000);
+          setTimeout(clearKey, 1500);
         }
       },
       function(err) {
-        if (!isSmoothMode) setLock(false);
-        showAutoToast("⚠️ 通信エラーが発生しました", 1500, true);
+        setLock(false);
+        document.getElementById('statusMsg').innerText = "通信エラー発生";
+        showAutoToast("⚠️ 通信エラーが発生しました", 2000);
       }
     );
   }
 
-  function confirmCheckInAuto(data) {
-    callGasApi(
-      { action: 'checkin', code: data.code, count: data.count },
-      function(res) {
-        if (res && res.success) {
-          showAutoToast("✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！", 1200);
-        } else {
-          showAutoToast("❌ 受付失敗: " + ((res && res.message) || ""), 1500, true);
-        }
-      },
-      function(err) {
-        showAutoToast("❌ 通信エラー", 1500, true);
-      }
-    );
-  }
-
-  function openResultModal(res) {
+  function showResultModal(res) {
     const modal = document.getElementById('resultModal');
     const badge = document.getElementById('modalBadge');
+    const name = document.getElementById('modalName');
+    const detail = document.getElementById('modalDetail');
     const actionArea = document.getElementById('modalActionArea');
     const shortArea = document.getElementById('modalShortArea');
     const grid = document.getElementById('modalShortcutGrid');
 
-    document.getElementById('modalName').innerText = res.nickname + " 様";
-    document.getElementById('modalDetail').innerText = res.category + " / 申込: " + res.count + "名";
+    name.innerText = (res.nickname || "ご来場者") + " 様";
+    detail.innerText = (res.category || "一般") + " / " + (res.count || 1) + "名";
 
     if (res.status === "キャンセル") {
       badge.innerText = "【キャンセル済み】";
@@ -745,6 +650,7 @@
     document.getElementById('resultModal').style.display = 'none';
     inputCode = "";
     lastScannedCode = "";
+    updateDisplay();
   }
 
   function confirmCheckIn(count) {
@@ -757,7 +663,10 @@
         setLock(false);
         if (res && res.success) {
           closeResultModal();
-          showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 1500);
+          showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 2000);
+          clearKey();
+          // 受付完了後は自動でスキャンモードへ広々復帰
+          toggleKeypadMode(false);
         } else {
           alert("エラー: " + ((res && res.message) || "受付処理に失敗しました"));
         }
@@ -769,147 +678,109 @@
     );
   }
 
-  function showAutoToast(msg, duration, isWarning) {
-    if (toastTimer) {
-      clearTimeout(toastTimer);
-      toastTimer = null;
-    }
+  function showAutoToast(msg, duration) {
     const oldToast = document.getElementById('autoToast');
     if (oldToast) oldToast.remove();
 
     const toast = document.createElement('div');
     toast.id = 'autoToast';
-    toast.className = 'toast-popup' + (isWarning ? ' toast-warning' : '');
+    toast.className = 'toast-popup';
     toast.innerHTML = msg;
     document.body.appendChild(toast);
 
-    toastTimer = setTimeout(function() {
-      if (toast && toast.parentNode) {
+    setTimeout(function() {
+      if (toast) {
+        toast.style.transition = "opacity 0.3s ease";
         toast.style.opacity = "0";
-        setTimeout(function() {
-          if (toast && toast.parentNode) {
-            toast.remove();
-          }
-        }, 300);
+        setTimeout(function() { toast.remove(); }, 300);
       }
     }, duration);
   }
 
-  function updateCameraSwitchBtnText() {
-    const btn = document.getElementById('btnSwitchCamera');
-    if (currentFacingMode === "user") {
-      btn.innerText = "🔄 アウトカメラ";
-    } else {
-      btn.innerText = "🔄 インカメラ";
-    }
+  function playBeepSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(1046.5, audioCtx.currentTime);
+      gain1.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start();
+      osc1.stop(audioCtx.currentTime + 0.08);
+
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1567.98, audioCtx.currentTime + 0.07);
+      gain2.gain.setValueAtTime(0.25, audioCtx.currentTime + 0.07);
+      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(audioCtx.currentTime + 0.07);
+      osc2.stop(audioCtx.currentTime + 0.18);
+    } catch (e) {}
   }
 
-  function toggleCameraFacing() {
-    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-    updateCameraSwitchBtnText();
-    restartCamera();
-  }
-
+  // ============================
+  // 常時QRコードスキャナー初期化
+  // ============================
   function initCameraScanner() {
-    if (isCameraRunning) return;
-    
-    document.getElementById('cameraStatus').innerText = "📷 起動中...";
-    document.getElementById('cameraStatus').style.background = "#e8e0d0";
-
-    const scannerCard = document.querySelector('.scanner-card');
-    const boxSize = scannerCard ? Math.floor(Math.min(scannerCard.clientWidth, scannerCard.clientHeight) * 0.7) : 220;
-
     html5QrCode = new Html5Qrcode("reader");
     const config = {
-      fps: 30,
-      qrbox: { width: boxSize, height: boxSize },
-      aspectRatio: 1.0,
-      experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true
-      }
+      fps: 15,
+      qrbox: { width: 160, height: 160 },
+      aspectRatio: 1.33
     };
 
     html5QrCode.start(
       { facingMode: currentFacingMode },
       config,
       function onScanSuccess(decodedText) {
-        if (!isSmoothMode) {
-          const modal = document.getElementById('resultModal');
-          if (modal && modal.style.display === 'flex') return;
-        }
-
         const code = extractCode(decodedText);
-        if (code && code !== lastScannedCode) {
+        if (code && code !== lastScannedCode && !isLoading) {
           lastScannedCode = code;
-          playBeepSound();
           inputCode = code;
-          searchCode();
-
-          clearTimeout(scanCooldownTimer);
+          updateDisplay();
+          
+          if (scanCooldownTimer) clearTimeout(scanCooldownTimer);
           scanCooldownTimer = setTimeout(function() {
             lastScannedCode = "";
-          }, 2000);
+          }, 3000);
         }
       },
-      function onScanFailure() {}
-    ).then(function() {
-      isCameraRunning = true;
-
-      const videoElem = document.querySelector('#reader video');
-      if (videoElem) {
-        if (currentFacingMode === "user") {
-          videoElem.style.setProperty('transform', 'scaleX(-1)', 'important');
-        } else {
-          videoElem.style.setProperty('transform', 'none', 'important');
-        }
-      }
-
-      document.getElementById('cameraStatus').innerText = "🟢 稼働中";
-      document.getElementById('cameraStatus').style.background = "#e6f4ea";
-      document.getElementById('cameraStatus').style.color = "#137333";
-    }).catch(function(err) {
-      isCameraRunning = false;
-      document.getElementById('cameraStatus').innerText = "⚠️ OFF (再試行)";
-      document.getElementById('cameraStatus').style.background = "#fce8e6";
-      document.getElementById('cameraStatus').style.color = "#c5221f";
+      function onScanError(errorMessage) {}
+    ).catch(function(err) {
+      console.error("Camera start error", err);
     });
   }
 
-  function restartCamera() {
-    const statusBadge = document.getElementById('cameraStatus');
-    statusBadge.innerText = "🔄 再起動中...";
-    
-    if (html5QrCode) {
-      html5QrCode.stop().then(function() {
-        isCameraRunning = false;
-        html5QrCode.clear();
-        setTimeout(initCameraScanner, 300);
-      }).catch(function() {
-        isCameraRunning = false;
-        setTimeout(initCameraScanner, 300);
-      });
-    } else {
+  function toggleCameraFacing() {
+    if (!html5QrCode) return;
+    currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+    html5QrCode.stop().then(function() {
       initCameraScanner();
-    }
+    }).catch(function() {
+      initCameraScanner();
+    });
   }
 
   function extractCode(text) {
-    if (!text) return null;
-    const trimmed = String(text).trim();
-    if (/^\d{5}$/.test(trimmed)) {
-      return trimmed;
-    }
-    const match = trimmed.match(/(\d{5})/);
-    if (match) {
-      return match[1];
-    }
-    return null;
+    if (!text) return "";
+    const match = text.match(/\b\d{5}\b/);
+    if (match) return match[0];
+    const cleaned = text.trim();
+    if (/^\d{5}$/.test(cleaned)) return cleaned;
+    return text.substring(0, 5);
   }
 
-  window.addEventListener('DOMContentLoaded', function() {
-    updateCameraSwitchBtnText();
-    initCameraScanner();
-  });
+  window.addEventListener("DOMContentLoaded", initCameraScanner);
 </script>
 
 </body>
