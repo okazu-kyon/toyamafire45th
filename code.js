@@ -24,6 +24,13 @@ function doGet(e) {
     const actualCount = Number(e.parameter.count) || 1;
     const result = checkInUser(code, actualCount);
     return createJsonResponse(result, e.parameter.callback);
+  } else if (action === 'get_all') {
+    const result = getAllData();
+    return createJsonResponse(result, e.parameter.callback);
+  } else if (action === 'bulk_checkin') {
+    const records = e.parameter.records;
+    const result = bulkCheckInUser(records);
+    return createJsonResponse(result, e.parameter.callback);
   }
 
   const page = e.parameter.p || 'form';
@@ -70,6 +77,115 @@ function getTargetSheet() {
     sheet = ss.getSheets()[0];
   }
   return sheet;
+}
+
+/**
+ * ローカル照合用：全データ一括取得処理
+ */
+function getAllData() {
+  try {
+    const sheet = getTargetSheet();
+    const data = sheet.getDataRange().getValues();
+    const list = [];
+
+    for (let i = 5; i < data.length; i++) {
+      const rowCode = String(data[i][0]).trim();
+      if (rowCode) {
+        list.push({
+          code: data[i][0],        // A列: 受付番号
+          category: data[i][1],    // B列: 来場者区分
+          nickname: data[i][2],    // C列: ニックネーム
+          count: data[i][3],       // D列: 人数
+          status: data[i][4],      // E列: ステータス
+          actualCount: data[i][5]  // F列: 入場人数
+        });
+      }
+    }
+
+    return {
+      success: true,
+      data: list
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      message: 'エラーが発生しました: ' + error.toString()
+    };
+  }
+}
+
+/**
+ * オフライン/バックグラウンド同期用：一括チェックイン処理
+ */
+function bulkCheckInUser(recordsJson) {
+  const lock = LockService.getScriptLock();
+  try {
+    // 同時書き込みを防ぐため最大30秒待機
+    lock.waitLock(30000);
+  } catch (e) {
+    return {
+      success: false,
+      message: 'アクセスが集中しています。しばらく経ってから再度お試しください。'
+    };
+  }
+
+  try {
+    let records = [];
+    if (typeof recordsJson === 'string') {
+      records = JSON.parse(recordsJson);
+    } else {
+      records = recordsJson;
+    }
+
+    if (!Array.isArray(records) || records.length === 0) {
+      return {
+        success: true,
+        processedCount: 0,
+        message: '同期対象のデータがありません。'
+      };
+    }
+
+    const sheet = getTargetSheet();
+    const data = sheet.getDataRange().getValues();
+
+    // 高速検索用マップの構築
+    const codeRowMap = new Map();
+    for (let i = 5; i < data.length; i++) {
+      const rowCode = String(data[i][0]).trim();
+      if (rowCode) {
+        codeRowMap.set(rowCode, i + 1); // 1-indexed 行番号
+      }
+    }
+
+    let updatedCount = 0;
+    records.forEach(function(item) {
+      const strCode = String(item.code).trim();
+      const actualCount = Number(item.count) || 1;
+      const rowIndex = codeRowMap.get(strCode);
+
+      if (rowIndex) {
+        sheet.getRange(rowIndex, 6).setValue(actualCount); // F列: 入場人数
+        sheet.getRange(rowIndex, 5).setValue('受付済');   // E列: ステータス
+        updatedCount++;
+      }
+    });
+
+    return {
+      success: true,
+      processedCount: updatedCount,
+      message: updatedCount + '件の受付データを同期完了しました。'
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      message: 'エラーが発生しました: ' + error.toString()
+    };
+  } finally {
+    // ロックを確実に解放
+    lock.releaseLock();
+  }
 }
 
 /**

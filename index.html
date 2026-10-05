@@ -431,7 +431,10 @@
 <div class="top-section">
   <div class="app-header">
     <div class="header-row1">
-      <div class="admin-title">受付用 照合システム</div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="admin-title">受付用 照合システム</div>
+        <span id="syncStatusBadge" style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; background: #e8f5e9; color: #1e7e34; border: 1px solid #c8e6c9;">🟢 通信OK</span>
+      </div>
       <button type="button" id="btnToggleMode" class="btn-mode-toggle" onclick="toggleKeypadMode()">
         <span>⌨️ 5桁番号で受付</span>
       </button>
@@ -508,6 +511,11 @@
   let html5QrCode = null;
 
   let isSmoothMode = true;
+
+  // ローカル優先照合・バックグラウンド自動同期用変数
+  let localMasterData = new Map();
+  let pendingSyncQueue = JSON.parse(localStorage.getItem('pendingSyncQueue') || '[]');
+  let isSyncing = false;
 
   function toggleSmoothMode() {
     const chk = document.getElementById('chkSmoothMode');
@@ -626,69 +634,134 @@
     }
   }
 
-  // 照合検索処理（スムーズモード時：ノンストップ・バックグラウンド自動受付）
+  // ステータスバッジ更新関数
+  function updateSyncStatusUI(statusType, count) {
+    const badge = document.getElementById('syncStatusBadge');
+    if (!badge) return;
+
+    if (statusType === 'online') {
+      badge.style.background = '#e8f5e9';
+      badge.style.color = '#1e7e34';
+      badge.style.borderColor = '#c8e6c9';
+      badge.innerText = '🟢 通信OK';
+    } else if (statusType === 'syncing') {
+      badge.style.background = '#e3f2fd';
+      badge.style.color = '#1565c0';
+      badge.style.borderColor = '#bbdefb';
+      badge.innerText = '🔵 同期中...';
+    } else if (statusType === 'offline' || count > 0) {
+      badge.style.background = '#fff3e0';
+      badge.style.color = '#d97706';
+      badge.style.borderColor = '#ffe0b2';
+      badge.innerText = '🟠 未送信 ' + count + '件';
+    }
+  }
+
+  // ローカルキャッシュ初期化 & マスターデータ全件取得
+  function initLocalCache() {
+    const cached = localStorage.getItem('localMasterData');
+    if (cached) {
+      try {
+        const list = JSON.parse(cached);
+        localMasterData.clear();
+        list.forEach(item => {
+          localMasterData.set(String(item.code).trim(), item);
+        });
+      } catch (e) {
+        console.error("キャッシュ解析エラー:", e);
+      }
+    }
+    fetchMasterData();
+  }
+
+  function fetchMasterData() {
+    callGasApi({ action: 'get_all' }, function(res) {
+      if (res && res.success && Array.isArray(res.data)) {
+        localMasterData.clear();
+        res.data.forEach(item => {
+          localMasterData.set(String(item.code).trim(), item);
+        });
+        localStorage.setItem('localMasterData', JSON.stringify(res.data));
+        console.log('✅ マスターデータ更新完了: ' + localMasterData.size + '件');
+      }
+    }, function(err) {
+      console.warn('マスターデータ取得通信エラー。ローカルキャッシュで動作します。');
+    });
+  }
+
+  // 照合検索処理（ローカルキャッシュ優先照合：通信レスポンス0秒）
   function searchCode() {
     if (!inputCode) return;
     const targetCode = inputCode;
     inputCode = "";
 
-    if (!isSmoothMode) {
-      setLock(true);
-      document.getElementById('statusMsg').innerText = "照合中 (" + targetCode + ")...";
+    const strCode = String(targetCode).trim();
+    let res = null;
+
+    if (localMasterData.has(strCode)) {
+      const cachedItem = localMasterData.get(strCode);
+      res = {
+        success: true,
+        code: cachedItem.code,
+        category: cachedItem.category,
+        nickname: cachedItem.nickname,
+        count: cachedItem.count,
+        status: cachedItem.status,
+        actualCount: cachedItem.actualCount
+      };
     }
 
-    callGasApi(
-      { action: 'search', code: targetCode },
-      function(res) {
-        if (!isSmoothMode) setLock(false);
-        if (res && res.success) {
-          currentData = res;
-          
-          if (isSmoothMode) {
-            if (res.status === "未受付") {
-              // 申込人数の確認をスキップし、バックグラウンドで自動即時チェックイン
-              confirmCheckInAuto(res);
-            } else if (res.status === "受付済") {
-              showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（受付完了済み: " + res.actualCount + "名）", 1800, true);
-            } else if (res.status === "キャンセル") {
-              showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 1800, true);
-            }
-          } else {
-            showResultModal(res);
-          }
-
-        } else {
-          if (isSmoothMode) {
-            showAutoToast("⚠️ 番号: " + targetCode + "<br>該当データがありません", 1800, true);
-          } else {
-            document.getElementById('statusMsg').innerText = "❌ 該当なし: " + targetCode;
-            showAutoToast("❌ 番号: " + targetCode + "<br>該当データがありません", 1800, true);
-            setTimeout(clearKey, 1500);
-          }
+    if (res && res.success) {
+      currentData = res;
+      
+      if (isSmoothMode) {
+        if (res.status === "未受付") {
+          // 申込人数の確認をスキップし、ローカルで即時チェックイン＋バックグラウンド同期
+          confirmCheckInAuto(res);
+        } else if (res.status === "受付済") {
+          showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（受付完了済み: " + res.actualCount + "名）", 1800, true);
+        } else if (res.status === "キャンセル") {
+          showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 1800, true);
         }
-      },
-      function(err) {
-        if (!isSmoothMode) setLock(false);
-        showAutoToast("⚠️ 通信エラーが発生しました", 1500, true);
+      } else {
+        showResultModal(res);
       }
-    );
+
+    } else {
+      if (isSmoothMode) {
+        showAutoToast("⚠️ 番号: " + targetCode + "<br>該当データがありません", 1800, true);
+      } else {
+        document.getElementById('statusMsg').innerText = "❌ 該当なし: " + targetCode;
+        showAutoToast("❌ 番号: " + targetCode + "<br>該当データがありません", 1800, true);
+        setTimeout(clearKey, 1500);
+      }
+    }
   }
 
+  // スムーズモード時の自動即時チェックイン（ローカル更新 ＋ 送信キュー追加）
   function confirmCheckInAuto(data) {
-    callGasApi(
-      { action: 'checkin', code: data.code, count: data.count },
-      function(res) {
-        if (res && res.success) {
-          showAutoToast("✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！", 1500);
-          if (isKeypadMode) clearKey();
-        } else {
-          showAutoToast("❌ 受付失敗: " + ((res && res.message) || ""), 1800, true);
-        }
-      },
-      function(err) {
-        showAutoToast("❌ 通信エラー", 1500, true);
-      }
-    );
+    const strCode = String(data.code).trim();
+    const actualCount = Number(data.count) || 1;
+
+    // 1. ローカルキャッシュのステータスを即座に「受付済」へ変更
+    if (localMasterData.has(strCode)) {
+      const item = localMasterData.get(strCode);
+      item.status = '受付済';
+      item.actualCount = actualCount;
+      localMasterData.set(strCode, item);
+      localStorage.setItem('localMasterData', JSON.stringify(Array.from(localMasterData.values())));
+    }
+
+    // 2. バックグラウンド送信キューに追加
+    pendingSyncQueue.push({ code: strCode, count: actualCount });
+    localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
+
+    // 3. 即時成功表示
+    showAutoToast("✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！", 1500);
+    if (isKeypadMode) clearKey();
+
+    // 4. バックグラウンド同期起動
+    triggerBackgroundSync();
   }
 
   function showResultModal(res) {
@@ -743,27 +816,69 @@
     updateDisplay();
   }
 
+  // 手動確認モードでの受付確定（ローカル即時反映 ＋ 送信キュー追加）
   function confirmCheckIn(count) {
     if (isLoading || !currentData) return;
-    setLock(true);
+    const strCode = String(currentData.code).trim();
+    const actualCount = Number(count) || 1;
 
+    // 1. ローカルキャッシュの更新
+    if (localMasterData.has(strCode)) {
+      const item = localMasterData.get(strCode);
+      item.status = '受付済';
+      item.actualCount = actualCount;
+      localMasterData.set(strCode, item);
+      localStorage.setItem('localMasterData', JSON.stringify(Array.from(localMasterData.values())));
+    }
+
+    // 2. バックグラウンド送信キューに追加
+    pendingSyncQueue.push({ code: strCode, count: actualCount });
+    localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
+
+    closeResultModal();
+    showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 2000);
+    clearKey();
+    // 受付完了後は自動でスキャンモードへ広々復帰
+    toggleKeypadMode(false);
+
+    // 3. バックグラウンド同期起動
+    triggerBackgroundSync();
+  }
+
+  // バックグラウンド自動同期（キューの未送信データをGASへ送信）
+  function triggerBackgroundSync() {
+    if (pendingSyncQueue.length === 0) {
+      updateSyncStatusUI('online', 0);
+      return;
+    }
+
+    if (isSyncing) return;
+    isSyncing = true;
+    updateSyncStatusUI('syncing', pendingSyncQueue.length);
+
+    const recordsToSend = [...pendingSyncQueue];
     callGasApi(
-      { action: 'checkin', code: currentData.code, count: count },
+      { action: 'bulk_checkin', records: JSON.stringify(recordsToSend) },
       function(res) {
-        setLock(false);
+        isSyncing = false;
         if (res && res.success) {
-          closeResultModal();
-          showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 2000);
-          clearKey();
-          // 受付完了後は自動でスキャンモードへ広々復帰
-          toggleKeypadMode(false);
+          pendingSyncQueue.splice(0, recordsToSend.length);
+          localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
+          console.log('🔄 バックグラウンド同期成功:', res.message);
+          
+          if (pendingSyncQueue.length === 0) {
+            updateSyncStatusUI('online', 0);
+          } else {
+            updateSyncStatusUI('offline', pendingSyncQueue.length);
+          }
         } else {
-          alert("エラー: " + ((res && res.message) || "受付処理に失敗しました"));
+          updateSyncStatusUI('offline', pendingSyncQueue.length);
         }
       },
       function(err) {
-        setLock(false);
-        alert("通信エラーが発生しました: " + err.message);
+        isSyncing = false;
+        console.warn('バックグラウンド同期通信保留（オフライン状態）');
+        updateSyncStatusUI('offline', pendingSyncQueue.length);
       }
     );
   }
@@ -884,7 +999,12 @@
     return text.substring(0, 5);
   }
 
-  window.addEventListener("DOMContentLoaded", initCameraScanner);
+  window.addEventListener("DOMContentLoaded", function() {
+    initCameraScanner();
+    initLocalCache();
+    updateSyncStatusUI(pendingSyncQueue.length > 0 ? 'offline' : 'online', pendingSyncQueue.length);
+    setInterval(triggerBackgroundSync, 5000);
+  });
 </script>
 
 </body>
