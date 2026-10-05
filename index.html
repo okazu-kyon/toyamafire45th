@@ -412,6 +412,7 @@
       min-width: 260px;
       line-height: 1.4;
       animation: popIn 0.15s ease-out;
+      transition: opacity 0.2s ease-out;
     }
     @keyframes popIn {
       from { opacity: 0; transform: translate(-50%, -20%); }
@@ -522,9 +523,9 @@
     if (chk) {
       isSmoothMode = chk.checked;
       if (isSmoothMode) {
-        showAutoToast("⚡ 爆速スムーズモード ON<br><span style='font-size:12px;'>ノンストップ自動照合・連続受付</span>", 1500);
+        showAutoToast("⚡ 爆速スムーズモード ON<br><span style='font-size:12px;'>ノンストップ自動照合・連続受付</span>", 3000);
       } else {
-        showAutoToast("💬 通常確認モード ON<br><span style='font-size:12px;'>確認ダイアログを表示します</span>", 1500);
+        showAutoToast("💬 通常確認モード ON<br><span style='font-size:12px;'>確認ダイアログを表示します</span>", 3000);
       }
     }
   }
@@ -719,9 +720,9 @@
           // 申込人数の確認をスキップし、ローカルで即時チェックイン＋バックグラウンド同期
           confirmCheckInAuto(res);
         } else if (res.status === "受付済") {
-          showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（受付完了済み: " + res.actualCount + "名）", 1800, true);
+          showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（受付完了済み: " + res.actualCount + "名）", 3000, true);
         } else if (res.status === "キャンセル") {
-          showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 1800, true);
+          showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 3000, true);
         }
       } else {
         showResultModal(res);
@@ -729,10 +730,10 @@
 
     } else {
       if (isSmoothMode) {
-        showAutoToast("⚠️ 番号: " + targetCode + "<br>該当データがありません", 1800, true);
+        showAutoToast("⚠️ 番号: " + targetCode + "<br>該当データがありません", 3000, true);
       } else {
         document.getElementById('statusMsg').innerText = "❌ 該当なし: " + targetCode;
-        showAutoToast("❌ 番号: " + targetCode + "<br>該当データがありません", 1800, true);
+        showAutoToast("❌ 番号: " + targetCode + "<br>該当データがありません", 3000, true);
         setTimeout(clearKey, 1500);
       }
     }
@@ -756,8 +757,8 @@
     pendingSyncQueue.push({ code: strCode, count: actualCount });
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
-    // 3. 即時成功表示
-    showAutoToast("✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！", 1500);
+    // 3. 即時成功表示（基本3秒。次のスキャンで即時消去＆上書き）
+    showAutoToast("✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！", 3000);
     if (isKeypadMode) clearKey();
 
     // 4. バックグラウンド同期起動
@@ -836,7 +837,7 @@
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
     closeResultModal();
-    showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 2000);
+    showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 3000);
     clearKey();
     // 受付完了後は自動でスキャンモードへ広々復帰
     toggleKeypadMode(false);
@@ -884,13 +885,24 @@
   }
 
   let toastTimer = null;
+  let toastFadeTimer = null;
+
+  // トースト表示機能（デフォルト3秒、次スキャン時は即時消去＆上書き切替）
   function showAutoToast(msg, duration, isWarning) {
     if (toastTimer) {
       clearTimeout(toastTimer);
       toastTimer = null;
     }
+    if (toastFadeTimer) {
+      clearTimeout(toastFadeTimer);
+      toastFadeTimer = null;
+    }
+
+    // 前回のトーストがあれば、フェードアウトを待たず即座に削除（完全リセット）
     const oldToast = document.getElementById('autoToast');
-    if (oldToast) oldToast.remove();
+    if (oldToast) {
+      oldToast.remove();
+    }
 
     const toast = document.createElement('div');
     toast.id = 'autoToast';
@@ -898,16 +910,18 @@
     toast.innerHTML = msg;
     document.body.appendChild(toast);
 
+    const displayTime = duration || 3000;
+
     toastTimer = setTimeout(function() {
       if (toast && toast.parentNode) {
         toast.style.opacity = "0";
-        setTimeout(function() {
+        toastFadeTimer = setTimeout(function() {
           if (toast && toast.parentNode) {
             toast.remove();
           }
-        }, 300);
+        }, 200);
       }
-    }, duration || 1500);
+    }, displayTime);
   }
 
   function playBeepSound() {
