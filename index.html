@@ -399,29 +399,30 @@
     }
     .btn-short:active { background: var(--primary-color); color: white; }
 
-    /* トーストポップアップ */
+    /* トーストポップアップ (下部エリア配置) */
     .toast-popup {
       position: fixed;
-      top: 50px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(139, 115, 85, 0.98);
       color: #ffffff;
       padding: 12px 24px;
-      border-radius: 10px;
-      border: 1px solid var(--accent-color);
+      border-radius: 12px;
+      border: 1.5px solid var(--accent-color);
       font-size: 16px;
       font-weight: 700;
       text-align: center;
       box-shadow: 0 6px 20px rgba(0,0,0,0.3);
       z-index: 2000;
-      min-width: 260px;
+      min-width: 280px;
       line-height: 1.4;
-      animation: popIn 0.15s ease-out;
+      animation: popInBottom 0.18s ease-out;
       transition: opacity 0.2s ease-out;
+      cursor: pointer;
     }
-    @keyframes popIn {
-      from { opacity: 0; transform: translate(-50%, -20%); }
+    @keyframes popInBottom {
+      from { opacity: 0; transform: translate(-50%, 20%); }
       to { opacity: 1; transform: translate(-50%, 0); }
     }
 
@@ -726,7 +727,9 @@
           // 申込人数の確認をスキップし、ローカルで即時チェックイン＋バックグラウンド同期
           confirmCheckInAuto(res);
         } else if (res.status === "受付済") {
-          showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（受付完了済み: " + res.actualCount + "名）", 3000, true);
+          showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（受付完了済み: " + res.actualCount + "名）<br><span style='font-size:11.5px; opacity:0.9; font-weight:500;'>👆 タップで人数を変更・修正</span>", 5000, true, function() {
+            showResultModal(res);
+          });
         } else if (res.status === "キャンセル") {
           showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 3000, true);
         }
@@ -763,8 +766,15 @@
     pendingSyncQueue.push({ code: strCode, count: actualCount });
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
-    // 3. 即時成功表示（基本3秒。次のスキャンで即時消去＆上書き）
-    showAutoToast("✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！", 3000);
+    // 3. 即時成功表示（5秒間。タップで人数変更ダイアログ起動。次のスキャンで即時消去＆上書き）
+    showAutoToast(
+      "✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！<br><span style='font-size:11.5px; opacity:0.9; font-weight:500;'>👆 タップで人数を変更・修正</span>",
+      5000,
+      false,
+      function() {
+        showResultModal(data);
+      }
+    );
     if (isKeypadMode) clearKey();
 
     // 4. バックグラウンド同期起動
@@ -894,8 +904,8 @@
   let toastTimer = null;
   let toastFadeTimer = null;
 
-  // トースト表示機能（デフォルト3秒、次スキャン時は即時消去＆上書き切替）
-  function showAutoToast(msg, duration, isWarning) {
+  // トースト表示機能（デフォルト3秒、タップイベントコールバック対応）
+  function showAutoToast(msg, duration, isWarning, onClickCallback) {
     if (toastTimer) {
       clearTimeout(toastTimer);
       toastTimer = null;
@@ -915,6 +925,17 @@
     toast.id = 'autoToast';
     toast.className = 'toast-popup' + (isWarning ? ' toast-warning' : '');
     toast.innerHTML = msg;
+
+    // タップ・クリック時のコールバック処理を登録
+    if (typeof onClickCallback === 'function') {
+      toast.onclick = function() {
+        if (toastTimer) clearTimeout(toastTimer);
+        if (toastFadeTimer) clearTimeout(toastFadeTimer);
+        toast.remove();
+        onClickCallback();
+      };
+    }
+
     document.body.appendChild(toast);
 
     const displayTime = duration || 3000;
