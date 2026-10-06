@@ -399,24 +399,25 @@
     }
     .btn-short:active { background: var(--primary-color); color: white; }
 
-    /* トーストポップアップ (下部エリア配置) */
+    /* トーストポップアップ (下部エリア配置・高視認性大型ダイアログ) */
     .toast-popup {
       position: fixed;
-      bottom: 20px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(139, 115, 85, 0.98);
+      background: #6e583e;
       color: #ffffff;
-      padding: 12px 24px;
-      border-radius: 12px;
-      border: 1.5px solid var(--accent-color);
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 2px solid var(--accent-color);
       font-size: 16px;
       font-weight: 700;
       text-align: center;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
       z-index: 2000;
-      min-width: 280px;
-      line-height: 1.4;
+      width: calc(100% - 24px);
+      max-width: 450px;
+      line-height: 1.45;
       animation: popInBottom 0.18s ease-out;
       transition: opacity 0.2s ease-out;
       cursor: pointer;
@@ -530,9 +531,9 @@
     if (chk) {
       isSmoothMode = chk.checked;
       if (isSmoothMode) {
-        showAutoToast("⚡ 爆速スムーズモード ON<br><span style='font-size:12px;'>ノンストップ自動照合・連続受付</span>", 3000);
+        showAutoToast("⚡ 爆速スムーズモード ON<br><span style='font-size:13px;'>ノンストップ自動照合・連続受付</span>", 3000);
       } else {
-        showAutoToast("💬 通常確認モード ON<br><span style='font-size:12px;'>確認ダイアログを表示します</span>", 3000);
+        showAutoToast("💬 通常確認モード ON<br><span style='font-size:13px;'>確認ダイアログを表示します</span>", 3000);
       }
     }
   }
@@ -727,11 +728,23 @@
           // 申込人数の確認をスキップし、ローカルで即時チェックイン＋バックグラウンド同期
           confirmCheckInAuto(res);
         } else if (res.status === "受付済") {
-          showAutoToast("⚠️ " + (res.nickname || "") + " 様<br>（受付完了済み: " + res.actualCount + "名）<br><span style='font-size:11.5px; opacity:0.9; font-weight:500;'>👆 タップで人数を変更・修正</span>", 5000, true, function() {
-            showResultModal(res);
-          });
+          showAutoToast(
+            "⚠️ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + (res.nickname || "") + " 様</span><br>" +
+            "<span style='font-size:18px; font-weight:700; color:#ffeb3b;'>受付完了済み（" + res.actualCount + "名）</span><br>" +
+            "<span style='font-size:12.5px; opacity:0.95; font-weight:700; display:inline-block; margin-top:6px; background:rgba(0,0,0,0.25); padding:4px 12px; border-radius:12px;'>👇 タップで人数を変更・修正</span>",
+            5000,
+            true,
+            function() {
+              showResultModal(res);
+            }
+          );
         } else if (res.status === "キャンセル") {
-          showAutoToast("❌ " + (res.nickname || "") + " 様<br>（キャンセル扱い）", 3000, true);
+          showAutoToast(
+            "❌ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + (res.nickname || "") + " 様</span><br>" +
+            "<span style='font-size:18px; font-weight:700; color:#ff8a80;'>（キャンセル扱い）</span>",
+            3000,
+            true
+          );
         }
       } else {
         showResultModal(res);
@@ -739,10 +752,10 @@
 
     } else {
       if (isSmoothMode) {
-        showAutoToast("⚠️ 番号: " + targetCode + "<br>該当データがありません", 3000, true);
+        showAutoToast("⚠️ <span style='font-size:18px;'>番号: " + targetCode + "</span><br><span style='font-size:16px;'>該当データがありません</span>", 3000, true);
       } else {
         document.getElementById('statusMsg').innerText = "❌ 該当なし: " + targetCode;
-        showAutoToast("❌ 番号: " + targetCode + "<br>該当データがありません", 3000, true);
+        showAutoToast("❌ <span style='font-size:18px;'>番号: " + targetCode + "</span><br><span style='font-size:16px;'>該当データがありません</span>", 3000, true);
         setTimeout(clearKey, 1500);
       }
     }
@@ -766,9 +779,11 @@
     pendingSyncQueue.push({ code: strCode, count: actualCount });
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
-    // 3. 即時成功表示（5秒間。タップで人数変更ダイアログ起動。次のスキャンで即時消去＆上書き）
+    // 3. 即時成功表示（5秒間。高視認性大型表示。タップで人数変更ダイアログ起動）
     showAutoToast(
-      "✅ " + data.nickname + " 様<br>（" + data.count + "名）受付完了！<br><span style='font-size:11.5px; opacity:0.9; font-weight:500;'>👆 タップで人数を変更・修正</span>",
+      "✅ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + data.nickname + " 様</span><br>" +
+      "<span style='font-size:19px; font-weight:900; color:#ffeb3b;'>（" + data.count + "名）受付完了！</span><br>" +
+      "<span style='font-size:12.5px; opacity:0.95; font-weight:700; display:inline-block; margin-top:6px; background:rgba(0,0,0,0.25); padding:4px 12px; border-radius:12px;'>👇 タップで人数を変更・修正</span>",
       5000,
       false,
       function() {
@@ -854,7 +869,11 @@
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
     closeResultModal();
-    showAutoToast("✅ " + currentData.nickname + " 様<br>（" + count + "名）受付完了！", 3000);
+    showAutoToast(
+      "✅ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + currentData.nickname + " 様</span><br>" +
+      "<span style='font-size:19px; font-weight:900; color:#ffeb3b;'>（" + count + "名）受付完了！</span>",
+      3000
+    );
     clearKey();
     // 受付完了後は自動でスキャンモードへ広々復帰
     toggleKeypadMode(false);
