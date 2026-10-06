@@ -10,7 +10,7 @@
   <style>
     @page {
       size: A4 portrait;
-      margin: 10mm;
+      margin: 8mm; /* 印刷余白を少し詰めて有効面積を確保 */
     }
     
     * {
@@ -25,20 +25,7 @@
       color: #333;
     }
 
-    /* 印刷時は背景やヘッダーを非表示にしてA4に合わせる */
-    @media print {
-      body {
-        background: #fff;
-        padding: 0;
-      }
-      .no-print {
-        display: none !important;
-      }
-      .page-break {
-        page-break-after: always;
-      }
-    }
-
+    /* 画面表示用のヘッダー */
     .header-bar {
       max-width: 960px;
       margin: 0 auto 20px auto;
@@ -81,17 +68,17 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
-    /* A4用紙用グリッド：3列×5行（1ページ15件、合計2ページ30件） */
+    /* A4用紙用グリッド：3列×5行 */
     .qr-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+      gap: 12px;
     }
 
     .qr-card {
-      border: 2px solid #e0d8cc;
-      border-radius: 10px;
-      padding: 12px 8px;
+      border: 1.5px solid #e0d8cc;
+      border-radius: 8px;
+      padding: 8px 4px;
       text-align: center;
       background: #faf8f5;
       display: flex;
@@ -102,47 +89,74 @@
 
     .qr-code-box {
       background: #ffffff;
-      padding: 8px;
+      padding: 6px;
       border: 1px solid #ddd;
-      border-radius: 8px;
-      margin-bottom: 8px;
+      border-radius: 6px;
+      margin-bottom: 4px;
       display: inline-block;
     }
 
+    /* QRコード画像内のcanvas/imgをレスポンシブに調整 */
+    .qr-code-box canvas,
+    .qr-code-box img {
+      display: block;
+      max-width: 100%;
+      height: auto !important;
+    }
+
     .user-code {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 900;
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
       color: #111;
+      line-height: 1.1;
       margin-bottom: 2px;
     }
 
     .user-meta {
-      font-size: 12px;
-      color: #666;
+      font-size: 11px;
+      color: #555;
       font-weight: 700;
+      line-height: 1.1;
     }
 
     .badge-cat {
       display: inline-block;
-      font-size: 11px;
-      padding: 2px 6px;
+      font-size: 10px;
+      padding: 1px 5px;
       background: #e8e0d0;
       border-radius: 4px;
-      margin-top: 2px;
+      margin-top: 3px;
       color: #444;
+      font-weight: 700;
     }
 
     .page-title-print {
       display: none;
       text-align: center;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 700;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       color: #444;
     }
 
+    .page-break {
+      height: 0;
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* ==========================================
+       印刷用スタイル（A4 1枚に15件ピッタリ収める調整）
+       ========================================== */
     @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
       .page-title-print {
         display: block;
       }
@@ -150,12 +164,36 @@
         box-shadow: none;
         padding: 0;
         max-width: 100%;
+        background: transparent;
+        margin: 0 !important;
       }
       .qr-grid {
-        gap: 10px;
+        gap: 6px; /* カード同士の間隔をスリム化 */
       }
       .qr-card {
-        padding: 8px 4px;
+        padding: 4px 2px;
+        background: #fff;
+        border-width: 1px;
+      }
+      .qr-code-box {
+        padding: 4px;
+        margin-bottom: 2px;
+      }
+      .qr-code-box canvas,
+      .qr-code-box img {
+        width: 92px !important;  /* 印刷時は少し小さくして縦幅を抑える */
+        height: 92px !important;
+      }
+      .user-code {
+        font-size: 14px;
+      }
+      .user-meta {
+        font-size: 10px;
+      }
+      .badge-cat {
+        font-size: 9px;
+        padding: 0px 4px;
+        margin-top: 2px;
       }
     }
   </style>
@@ -179,10 +217,10 @@
     <div class="qr-grid" id="gridPage1"></div>
   </div>
 
-  <div class="page-break" style="height: 30px;"></div>
+  <div class="page-break"></div>
 
   <!-- QRコード一覧エリア (Page 2: 15件) -->
-  <div class="qr-grid-container" style="margin-top: 20px;">
+  <div class="qr-grid-container">
     <div class="page-title-print">連続スキャンテスト用 QRコード一覧 (2 / 2)</div>
     <div class="qr-grid" id="gridPage2"></div>
   </div>
@@ -200,7 +238,6 @@
       const count = (i % 3) + 1; // 1〜3名
       testData.push({ code, category, nickname, count });
     }
-
 
     // カード要素の動的生成
     function createCard(item) {
