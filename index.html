@@ -379,9 +379,15 @@
     }
 
     .sub-change-title { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; font-weight: 700; }
-    .shortcut-grid { display: flex; gap: 8px; margin-bottom: 12px; }
+    .shortcut-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
     .btn-short {
-      flex: 1;
+      flex: 1 1 calc(25% - 6px);
+      min-width: 50px;
       padding: 10px 0;
       font-size: 15px;
       font-weight: 700;
@@ -485,11 +491,11 @@
     <div id="modalDetail" class="modal-detail">一般 / 1名</div>
 
     <div id="modalActionArea">
-      <button id="btnModalConfirm" class="btn-confirm-large" onclick="confirmCheckIn(currentData.count)">
+      <button id="btnModalConfirm" class="btn-confirm-large" onclick="confirmCheckIn(currentData ? currentData.count : 1)">
         🟢 <span id="modalBtnText">1名</span> で受付確定
       </button>
 
-      <div id="modalShortArea" style="display:none;">
+      <div id="modalShortArea">
         <div class="sub-change-title">人数を変更して受付:</div>
         <div id="modalShortcutGrid" class="shortcut-grid"></div>
       </div>
@@ -781,29 +787,30 @@
       badge.innerText = "【キャンセル済み】";
       badge.style.color = "var(--danger-color)";
       actionArea.style.display = 'none';
-    } else if (res.status === "受付済") {
-      badge.innerText = "【受付完了済み（入場: " + res.actualCount + "名）】";
-      badge.style.color = "var(--warning-color)";
-      actionArea.style.display = 'none';
     } else {
-      badge.innerText = "【未受付】";
-      badge.style.color = "var(--success-color)";
-      actionArea.style.display = 'block';
-      document.getElementById('modalBtnText').innerText = res.count + "名";
-
-      const maxCount = parseInt(res.count, 10);
-      grid.innerHTML = "";
-      if (maxCount > 1) {
-        shortArea.style.display = 'block';
-        for (let i = 1; i < maxCount; i++) {
-          const btn = document.createElement('button');
-          btn.className = 'btn-short';
-          btn.innerText = i + '名';
-          btn.onclick = function() { confirmCheckIn(i); };
-          grid.appendChild(btn);
-        }
+      if (res.status === "受付済") {
+        badge.innerText = "【受付完了済み（入場: " + (res.actualCount || res.count || 1) + "名）】";
+        badge.style.color = "var(--warning-color)";
       } else {
-        shortArea.style.display = 'none';
+        badge.innerText = "【未受付】";
+        badge.style.color = "var(--success-color)";
+      }
+
+      actionArea.style.display = 'block';
+      document.getElementById('modalBtnText').innerText = (res.count || 1) + "名";
+
+      const maxCount = parseInt(res.count, 10) || 1;
+      grid.innerHTML = "";
+      shortArea.style.display = 'block';
+
+      // 1グループ最大4名上限に合わせて、1名〜4名の選択ボタンを常時生成
+      const limit = Math.max(maxCount, 4);
+      for (let i = 1; i <= limit; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-short';
+        btn.innerText = i + '名';
+        btn.onclick = function() { confirmCheckIn(i); };
+        grid.appendChild(btn);
       }
     }
 
