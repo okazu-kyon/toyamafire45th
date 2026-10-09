@@ -779,7 +779,7 @@
     pendingSyncQueue.push({ code: strCode, count: actualCount });
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
-    // 照合確定音「ピ・ローン♪」（0.5秒遅延・厚み＆ロング余韻仕様）を発音
+    // teket公式デモ動画(DaqE1yxAzYk)再現：受付成功音「ピロン♪」を発音
     playBeepSound();
 
     // 3. 即時成功表示（5秒間。高視認性大型表示。タップで人数変更ダイアログ起動）
@@ -873,7 +873,7 @@
 
     closeResultModal();
 
-    // 照合確定音「ピ・ローン♪」を発音
+    // teket公式デモ動画(DaqE1yxAzYk)再現：受付成功音「ピロン♪」を発音
     playBeepSound();
 
     showAutoToast(
@@ -978,7 +978,7 @@
     }, displayTime);
   }
 
-  // QRコード読み取り検知音（パターンFベース / 3136Hz 三角波 / 0.3秒間）
+  // QRコード読み取り検知音（軽快で短く鋭い「ピッ」 / 会場用に最大音量1.0）
   function playScanBeep() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -988,18 +988,18 @@
       
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'triangle'; // パターンF: 三角波
-      osc.frequency.setValueAtTime(3136, audioCtx.currentTime); // G7 (3136Hz)
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2400, audioCtx.currentTime); // クリアな高音ピッ
       gain.gain.setValueAtTime(1.0, audioCtx.currentTime); // 最大音量 (1.0)
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3); // 0.3秒間伸ばす
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
+      osc.stop(audioCtx.currentTime + 0.04);
     } catch (e) {}
   }
 
-  // 照合完了・受付成功音（「ピッ」から0.5秒遅延 / 厚みのある和音 ＆ 0.75秒ロング余韻の「ピ・ローン♪」）
+  // teket公式デモ動画 (DaqE1yxAzYk) 完全再現：受付成功音（軽快で歯切れの良い「ピロン♪」 / 会場用に最大音量1.0）
   function playBeepSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1007,53 +1007,32 @@
         audioCtx.resume();
       }
       
-      const delay = 0.5; // スキャン「ピッ」（0.3s）から0.5秒後に照合完了音を開始
-      const startTime = audioCtx.currentTime + delay;
+      const now = audioCtx.currentTime;
 
-      // 1音目「ピ」（C6: 1046.5Hz ＋ E6: 1318.5Hz の和音で厚みを追加）
-      const osc1_a = audioCtx.createOscillator();
-      const osc1_b = audioCtx.createOscillator();
+      // 1音目「ピ」（高音 G6: 1567.98Hz）
+      const osc1 = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
-      
-      osc1_a.type = 'sine';
-      osc1_a.frequency.setValueAtTime(1046.5, startTime);
-      osc1_b.type = 'sine';
-      osc1_b.frequency.setValueAtTime(1318.51, startTime); // 3度上の和音
-
-      gain1.gain.setValueAtTime(1.0, startTime);
-      gain1.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
-
-      osc1_a.connect(gain1);
-      osc1_b.connect(gain1);
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(1567.98, now);
+      gain1.gain.setValueAtTime(0.8, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc1.connect(gain1);
       gain1.connect(audioCtx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.06);
 
-      osc1_a.start(startTime);
-      osc1_b.start(startTime);
-      osc1_a.stop(startTime + 0.12);
-      osc1_b.stop(startTime + 0.12);
-
-      // 2音目「ローン」（G6: 1567.98Hz ＋ C7: 2093Hz のオクターブ和音 / 余韻を0.75秒に延長）
-      const osc2_a = audioCtx.createOscillator();
-      const osc2_b = audioCtx.createOscillator();
+      // 2音目「ロン」（超高音 C7: 2093.00Hz / 軽快な余韻約0.15秒）
+      const osc2 = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
-      const t2 = startTime + 0.09;
-
-      osc2_a.type = 'sine';
-      osc2_a.frequency.setValueAtTime(1567.98, t2);
-      osc2_b.type = 'sine';
-      osc2_b.frequency.setValueAtTime(2093.00, t2); // 高音倍音（華やかさと厚み）
-
-      gain2.gain.setValueAtTime(1.0, t2);
-      gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.75); // 0.75秒へロングスライド
-
-      osc2_a.connect(gain2);
-      osc2_b.connect(gain2);
+      const t2 = now + 0.04; // わずか0.04秒差でつながる軽快なアルペジオ
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(2093.00, t2);
+      gain2.gain.setValueAtTime(1.0, t2); // 最大音量 (1.0)
+      gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.16);
+      osc2.connect(gain2);
       gain2.connect(audioCtx.destination);
-
-      osc2_a.start(t2);
-      osc2_b.start(t2);
-      osc2_a.stop(t2 + 0.75);
-      osc2_b.stop(t2 + 0.75);
+      osc2.start(t2);
+      osc2.stop(t2 + 0.16);
     } catch (e) {}
   }
 
