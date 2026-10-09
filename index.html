@@ -779,6 +779,9 @@
     pendingSyncQueue.push({ code: strCode, count: actualCount });
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
+    // 照合確定音「ピ・ローン♪」を発音
+    playBeepSound();
+
     // 3. 即時成功表示（5秒間。高視認性大型表示。タップで人数変更ダイアログ起動）
     showAutoToast(
       "✅ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + data.nickname + " 様</span><br>" +
@@ -869,6 +872,10 @@
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
     closeResultModal();
+
+    // 照合確定音「ピ・ローン♪」を発音
+    playBeepSound();
+
     showAutoToast(
       "✅ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + currentData.nickname + " 様</span><br>" +
       "<span style='font-size:19px; font-weight:900; color:#ffeb3b;'>（" + count + "名）受付完了！</span>",
@@ -971,6 +978,28 @@
     }, displayTime);
   }
 
+  // QRコード読み取り検知音（鋭い短音「ピッ」 / 会場用に最大音量1.0）
+  function playScanBeep() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2093, audioCtx.currentTime); // C7 (約2100Hz 高域でクリアに通る音)
+      gain.gain.setValueAtTime(1.0, audioCtx.currentTime); // 最大音量 (1.0)
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    } catch (e) {}
+  }
+
+  // 照合完了・受付成功音（明るい2段ステップ「ピ・ローン♪」 / 会場用に最大音量1.0）
   function playBeepSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -978,27 +1007,29 @@
         audioCtx.resume();
       }
       
+      // 1音目「ピ」（C6: 1046.5Hz）
       const osc1 = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
       osc1.type = 'sine';
       osc1.frequency.setValueAtTime(1046.5, audioCtx.currentTime);
-      gain1.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      gain1.gain.setValueAtTime(1.0, audioCtx.currentTime); // 最大音量 (1.0)
+      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.09);
       osc1.connect(gain1);
       gain1.connect(audioCtx.destination);
       osc1.start();
-      osc1.stop(audioCtx.currentTime + 0.08);
+      osc1.stop(audioCtx.currentTime + 0.09);
 
+      // 2音目「ローン」（G6: 1567.98Hz / 余韻を長めに伸ばしてしっかり通る音に）
       const osc2 = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
       osc2.type = 'sine';
       osc2.frequency.setValueAtTime(1567.98, audioCtx.currentTime + 0.07);
-      gain2.gain.setValueAtTime(0.25, audioCtx.currentTime + 0.07);
-      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+      gain2.gain.setValueAtTime(1.0, audioCtx.currentTime + 0.07); // 最大音量 (1.0)
+      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.28);
       osc2.connect(gain2);
       gain2.connect(audioCtx.destination);
       osc2.start(audioCtx.currentTime + 0.07);
-      osc2.stop(audioCtx.currentTime + 0.18);
+      osc2.stop(audioCtx.currentTime + 0.28);
     } catch (e) {}
   }
 
@@ -1025,7 +1056,7 @@
         const code = extractCode(decodedText);
         if (code && code !== lastScannedCode && !isLoading) {
           lastScannedCode = code;
-          playBeepSound(); // スキャン成功時に即座にこだわりのピッピ音を発音！
+          playScanBeep(); // 1. カメラがコードを検知した瞬間に「ピッ」と発音！
           inputCode = code;
           searchCode();
           
