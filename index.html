@@ -169,7 +169,7 @@
       white-space: nowrap;
     }
 
-    /* リアルタイム来場者数カウンター */
+    /* リアルタイム来場者数カウンター (総入場数 / 総申込数) */
     .visitor-counter-badge {
       display: inline-flex;
       align-items: center;
@@ -520,8 +520,8 @@
       </button>
     </div>
     <div class="header-row2">
-      <!-- リアルタイム来場者数カウンター -->
-      <div id="visitorCounter" class="visitor-counter-badge"><span style="display:inline-block; transform:translateY(-1px);">👥</span> 来場者数: 0 / 0名</div>
+      <!-- リアルタイムカウンター (総入場数 / 総申込数ベース) -->
+      <div id="visitorCounter" class="visitor-counter-badge"><span style="display:inline-block; transform:translateY(-1px);">👥</span> 総入場 / 総申込: 0 / 0名</div>
       <button type="button" class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 カメラ切替</button>
     </div>
   </div>
@@ -722,10 +722,10 @@
     }
   }
 
-  // リアルタイム来場者数カウンター更新関数
+  // リアルタイムカウンター更新関数（総申込数・総入場数ベースに統一）
   function updateVisitorCounter() {
-    let totalPeople = 0;     // 全体の総申し込み人数
-    let checkedInPeople = 0; // 来場済み人数
+    let totalPeople = 0;     // 総申込数（人数ベース）
+    let checkedInPeople = 0; // 総入場数（実績入場人数ベース）
 
     localMasterData.forEach(item => {
       const ticketCount = Number(item.count) || 1;
@@ -738,7 +738,7 @@
 
     const counterEl = document.getElementById('visitorCounter');
     if (counterEl) {
-      counterEl.innerHTML = `<span style="display:inline-block; transform:translateY(-1px);">👥</span> 来場者数: ${checkedInPeople} / ${totalPeople}名`;
+      counterEl.innerHTML = `<span style="display:inline-block; transform:translateY(-1px);">👥</span> 総入場 / 総申込: ${checkedInPeople} / ${totalPeople}名`;
     }
   }
 
@@ -952,9 +952,8 @@
     triggerBackgroundSync();
   }
 
-  // バックグラウンド自動同期 ＆ 定期データ更新
+  // バックグラウンド自動同期
   function triggerBackgroundSync() {
-    // 1. 未送信キューがあればサーバーへ送信
     if (pendingSyncQueue.length > 0 && !isSyncing) {
       isSyncing = true;
       updateSyncStatusUI('syncing', pendingSyncQueue.length);
@@ -1152,7 +1151,7 @@
     initLocalCache();
     updateSyncStatusUI(pendingSyncQueue.length > 0 ? 'offline' : 'online', pendingSyncQueue.length);
     
-    // 定期処理：10秒ごとにサーバーへ未送信データを同期しつつ、最新マスターデータを自動取得して全端末のカウンターを同期
+    // 10秒ごとにサーバー同期＆最新マスターデータ取得で全端末のカウンターを同期
     setInterval(function() {
       triggerBackgroundSync();
       fetchMasterData();
