@@ -521,7 +521,7 @@
     </div>
     <div class="header-row2">
       <!-- リアルタイム来場者数カウンター -->
-      <div id="visitorCounter" class="visitor-counter-badge">👥 来場者数: 0 / 0名</div>
+      <div id="visitorCounter" class="visitor-counter-badge"><span style="display:inline-block; transform:translateY(-1px);">👥</span> 来場者数: 0 / 0名</div>
       <button type="button" class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 カメラ切替</button>
     </div>
   </div>
@@ -738,7 +738,7 @@
 
     const counterEl = document.getElementById('visitorCounter');
     if (counterEl) {
-      counterEl.innerText = `👥 来場者数: ${checkedInPeople} / ${totalPeople}名`;
+      counterEl.innerHTML = `<span style="display:inline-block; transform:translateY(-1px);">👥</span> 来場者数: ${checkedInPeople} / ${totalPeople}名`;
     }
   }
 
@@ -943,7 +943,7 @@
 
     showAutoToast(
       "✅ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + currentData.nickname + " 様</span><br>" +
-      "<span style='font-size:19px; font-weight:900; color:#ffeb3b;'>（" + count + "名）受付完了！</span>",
+      "<span style='font-size:19px; font-weight:900; color:#ffeb3b;'>" + count + "名で受付完了！</span>",
       3000
     );
     clearKey();
@@ -952,42 +952,41 @@
     triggerBackgroundSync();
   }
 
-  // バックグラウンド自動同期
+  // バックグラウンド自動同期 ＆ 定期データ更新
   function triggerBackgroundSync() {
-    if (pendingSyncQueue.length === 0) {
-      updateSyncStatusUI('online', 0);
-      return;
-    }
+    // 1. 未送信キューがあればサーバーへ送信
+    if (pendingSyncQueue.length > 0 && !isSyncing) {
+      isSyncing = true;
+      updateSyncStatusUI('syncing', pendingSyncQueue.length);
 
-    if (isSyncing) return;
-    isSyncing = true;
-    updateSyncStatusUI('syncing', pendingSyncQueue.length);
-
-    const recordsToSend = [...pendingSyncQueue];
-    callGasApi(
-      { action: 'bulk_checkin', records: JSON.stringify(recordsToSend) },
-      function(res) {
-        isSyncing = false;
-        if (res && res.success) {
-          pendingSyncQueue.splice(0, recordsToSend.length);
-          localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
-          console.log('🔄 バックグラウンド同期成功:', res.message);
-          
-          if (pendingSyncQueue.length === 0) {
-            updateSyncStatusUI('online', 0);
+      const recordsToSend = [...pendingSyncQueue];
+      callGasApi(
+        { action: 'bulk_checkin', records: JSON.stringify(recordsToSend) },
+        function(res) {
+          isSyncing = false;
+          if (res && res.success) {
+            pendingSyncQueue.splice(0, recordsToSend.length);
+            localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
+            console.log('🔄 バックグラウンド同期成功:', res.message);
+            
+            if (pendingSyncQueue.length === 0) {
+              updateSyncStatusUI('online', 0);
+            } else {
+              updateSyncStatusUI('offline', pendingSyncQueue.length);
+            }
           } else {
             updateSyncStatusUI('offline', pendingSyncQueue.length);
           }
-        } else {
+        },
+        function(err) {
+          isSyncing = false;
+          console.warn('バックグラウンド同期通信保留（オフライン状態）');
           updateSyncStatusUI('offline', pendingSyncQueue.length);
         }
-      },
-      function(err) {
-        isSyncing = false;
-        console.warn('バックグラウンド同期通信保留（オフライン状態）');
-        updateSyncStatusUI('offline', pendingSyncQueue.length);
-      }
-    );
+      );
+    } else if (pendingSyncQueue.length === 0) {
+      updateSyncStatusUI('online', 0);
+    }
   }
 
   let toastTimer = null;
@@ -1152,7 +1151,12 @@
 
     initLocalCache();
     updateSyncStatusUI(pendingSyncQueue.length > 0 ? 'offline' : 'online', pendingSyncQueue.length);
-    setInterval(triggerBackgroundSync, 5000);
+    
+    // 定期処理：10秒ごとにサーバーへ未送信データを同期しつつ、最新マスターデータを自動取得して全端末のカウンターを同期
+    setInterval(function() {
+      triggerBackgroundSync();
+      fetchMasterData();
+    }, 10000);
   });
 </script>
 
