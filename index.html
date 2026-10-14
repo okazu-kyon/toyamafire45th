@@ -521,7 +521,7 @@
     </div>
     <div class="header-row2">
       <!-- リアルタイム来場者数カウンター -->
-      <div id="visitorCounter" class="visitor-counter-badge">👥 来場: 0 / 0名</div>
+      <div id="visitorCounter" class="visitor-counter-badge">👥 来場者数: 0 / 0名</div>
       <button type="button" class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 カメラ切替</button>
     </div>
   </div>
@@ -724,18 +724,21 @@
 
   // リアルタイム来場者数カウンター更新関数
   function updateVisitorCounter() {
-    let totalTickets = localMasterData.size;
-    let checkedInPeople = 0;
+    let totalPeople = 0;     // 全体の総申し込み人数
+    let checkedInPeople = 0; // 来場済み人数
 
     localMasterData.forEach(item => {
+      const ticketCount = Number(item.count) || 1;
+      totalPeople += ticketCount;
+
       if (item.status === '受付済') {
-        checkedInPeople += (Number(item.actualCount) || Number(item.count) || 1);
+        checkedInPeople += (Number(item.actualCount) || ticketCount);
       }
     });
 
     const counterEl = document.getElementById('visitorCounter');
     if (counterEl) {
-      counterEl.innerText = `👥 来場: ${checkedInPeople} / ${totalTickets}名`;
+      counterEl.innerText = `👥 来場者数: ${checkedInPeople} / ${totalPeople}名`;
     }
   }
 
@@ -773,7 +776,7 @@
     });
   }
 
-  // 照合検索処理（ローカルキャッシュ優先照合：常時スムーズ自動受付）
+  // 照合検索処理（ローカルキャッシュ優先照合：常時自動受付）
   function searchCode() {
     if (!inputCode) return;
     const targetCode = inputCode;
