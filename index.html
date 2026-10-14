@@ -54,6 +54,68 @@
       color: var(--text-main);
     }
 
+    /* 起動時の自作同意・案内モーダル（QQ Recorder風） */
+    #startOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      backdrop-filter: blur(3px);
+    }
+
+    #startGuideBox {
+      background: var(--card-bg);
+      width: 88%;
+      max-width: 380px;
+      padding: 22px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      border: 2px solid var(--accent-color);
+      text-align: center;
+    }
+
+    #startGuideBox h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: var(--primary-color);
+      border-bottom: 2px dashed var(--border-color);
+      padding-bottom: 10px;
+      font-weight: 900;
+    }
+
+    #startGuideBox p {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      line-height: 1.6;
+      margin: 15px 0 20px 0;
+      text-align: left;
+      font-weight: 700;
+    }
+
+    #btnCloseGuide {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 1.05rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
+      transition: background 0.2s;
+    }
+    #btnCloseGuide:active {
+      background: var(--primary-hover);
+      transform: scale(0.97);
+    }
+
     /* 上部エリア（カメラ＋ディスプレイ） */
     .top-section {
       width: 100%;
@@ -191,7 +253,7 @@
       object-fit: cover !important;
     }
 
-    /* 周囲の暗いマスク（くり抜き）をなくし、クリアな画面に視認性の良い枠だけを表示 */
+    /* 周囲の暗いマスクをなくし、クリアな画面に視認性の良い枠を表示 */
     .scanner-overlay-guide {
       position: absolute;
       top: 50%;
@@ -436,6 +498,18 @@
   </style>
 </head>
 <body>
+
+<!-- 起動時の自作同意・案内モーダル -->
+<div id="startOverlay">
+  <div id="startGuideBox">
+    <h2>受付用 QR照合システム</h2>
+    <p>
+      ご来場ありがとうございます。<br>
+      本システムでは、スムーズな入場受付のためにカメラによるQRコード読み取りおよびローカル同期機能を使用します。
+    </p>
+    <button id="btnCloseGuide">同意して受付を開始する</button>
+  </div>
+</div>
 
 <!-- 上部エリア（カメラ＋ディスプレイ） -->
 <div class="top-section">
@@ -1000,7 +1074,7 @@
     } catch (e) {}
   }
 
-  // 照合完了・受付成功音（「ピッ」から0.5秒遅延 / 厚みのある和音 ＆ 0.75秒ロング余韻の・ピ・ローン♪）
+  // 照合完了・受付成功音（「ピッ」から0.5秒遅延 / 厚みのある和音 ＆ 0.75秒ロング余韻の「ピ・ローン♪」）
   function playBeepSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1117,7 +1191,16 @@
   }
 
   window.addEventListener("DOMContentLoaded", function() {
-    initCameraScanner();
+    // 起動時は自作の同意モーダルを表示しておき、カメラは即時起動しない
+    const startOverlay = document.getElementById('startOverlay');
+    const btnCloseGuide = document.getElementById('btnCloseGuide');
+
+    btnCloseGuide.onclick = function() {
+      startOverlay.style.display = 'none';
+      // ユーザーの同意ボタンタップを起点にカメラを初期化
+      initCameraScanner();
+    };
+
     initLocalCache();
     updateSyncStatusUI(pendingSyncQueue.length > 0 ? 'offline' : 'online', pendingSyncQueue.length);
     setInterval(triggerBackgroundSync, 5000);
