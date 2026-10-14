@@ -54,7 +54,7 @@
       color: var(--text-main);
     }
 
-    /* 起動時の自作同意・案内モーダル（CSSで最初から最速表示） */
+    /* 起動時の受付スタッフ向け案内モーダル */
     #startOverlay {
       position: fixed;
       top: 0;
@@ -62,7 +62,7 @@
       width: 100%;
       height: 100%;
       background: rgba(0, 0, 0, 0.75);
-      display: flex; /* 最初から表示 */
+      display: flex;
       align-items: center;
       justify-content: center;
       z-index: 3000;
@@ -169,24 +169,19 @@
       white-space: nowrap;
     }
 
-    .smooth-mode-label {
+    /* リアルタイム来場者数カウンター */
+    .visitor-counter-badge {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
       font-size: 11.5px;
       font-weight: 700;
       color: var(--primary-color);
-      cursor: pointer;
       background: #f0eae1;
-      padding: 4px 8px;
+      padding: 4px 10px;
       border-radius: 14px;
       border: 1px solid var(--border-color);
       white-space: nowrap;
-      user-select: none;
-    }
-    .smooth-mode-label input[type="checkbox"] {
-      cursor: pointer;
-      accent-color: var(--primary-color);
     }
 
     /* モード切替ボタン (画面右上) */
@@ -525,9 +520,8 @@
       </button>
     </div>
     <div class="header-row2">
-      <label class="smooth-mode-label" title="スムーズモード: ON時は1名様で自動受付完了します">
-        <input type="checkbox" id="chkSmoothMode" checked onchange="toggleSmoothMode()"> ⚡ スムーズ
-      </label>
+      <!-- リアルタイム来場者数カウンター -->
+      <div id="visitorCounter" class="visitor-counter-badge">👥 来場: 0 / 0名</div>
       <button type="button" class="btn-switch-camera" id="btnSwitchCamera" onclick="toggleCameraFacing()">🔄 カメラ切替</button>
     </div>
   </div>
@@ -595,24 +589,10 @@
   let currentFacingMode = "environment";
   let html5QrCode = null;
 
-  let isSmoothMode = true;
-
   // ローカル優先照合・バックグラウンド自動同期用変数
   let localMasterData = new Map();
   let pendingSyncQueue = JSON.parse(localStorage.getItem('pendingSyncQueue') || '[]');
   let isSyncing = false;
-
-  function toggleSmoothMode() {
-    const chk = document.getElementById('chkSmoothMode');
-    if (chk) {
-      isSmoothMode = chk.checked;
-      if (isSmoothMode) {
-        showAutoToast("⚡ 爆速スムーズモード ON<br><span style='font-size:13px;'>ノンストップ自動照合・連続受付</span>", 3000);
-      } else {
-        showAutoToast("💬 通常確認モード ON<br><span style='font-size:13px;'>確認ダイアログを表示します</span>", 3000);
-      }
-    }
-  }
 
   function toggleKeypadMode(forceMode) {
     if (typeof forceMode === 'boolean') {
@@ -742,6 +722,23 @@
     }
   }
 
+  // リアルタイム来場者数カウンター更新関数
+  function updateVisitorCounter() {
+    let totalTickets = localMasterData.size;
+    let checkedInPeople = 0;
+
+    localMasterData.forEach(item => {
+      if (item.status === '受付済') {
+        checkedInPeople += (Number(item.actualCount) || Number(item.count) || 1);
+      }
+    });
+
+    const counterEl = document.getElementById('visitorCounter');
+    if (counterEl) {
+      counterEl.innerText = `👥 来場: ${checkedInPeople} / ${totalTickets}名`;
+    }
+  }
+
   // ローカルキャッシュ初期化 & マスターデータ全件取得
   function initLocalCache() {
     const cached = localStorage.getItem('localMasterData');
@@ -752,6 +749,7 @@
         list.forEach(item => {
           localMasterData.set(String(item.code).trim(), item);
         });
+        updateVisitorCounter();
       } catch (e) {
         console.error("キャッシュ解析エラー:", e);
       }
@@ -767,6 +765,7 @@
           localMasterData.set(String(item.code).trim(), item);
         });
         localStorage.setItem('localMasterData', JSON.stringify(res.data));
+        updateVisitorCounter();
         console.log('✅ マスターデータ更新完了: ' + localMasterData.size + '件');
       }
     }, function(err) {
@@ -774,7 +773,7 @@
     });
   }
 
-  // 照合検索処理（ローカルキャッシュ優先照合：通信レスポンス0秒）
+  // 照合検索処理（ローカルキャッシュ優先照合：常時スムーズ自動受付）
   function searchCode() {
     if (!inputCode) return;
     const targetCode = inputCode;
@@ -799,45 +798,35 @@
     if (res && res.success) {
       currentData = res;
       
-      if (isSmoothMode) {
-        if (res.status === "未受付") {
-          // 申込人数の確認をスキップし、ローカルで即時チェックイン＋バックグラウンド同期
-          confirmCheckInAuto(res);
-        } else if (res.status === "受付済") {
-          showAutoToast(
-            "⚠️ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + (res.nickname || "") + " 様</span><br>" +
-            "<span style='font-size:18px; font-weight:700; color:#ffeb3b;'>受付完了済み（" + res.actualCount + "名）</span><br>" +
-            "<span style='font-size:12.5px; opacity:0.95; font-weight:700; display:inline-block; margin-top:6px; background:rgba(0,0,0,0.25); padding:4px 12px; border-radius:12px;'>👇 タップで人数を変更・修正</span>",
-            5000,
-            true,
-            function() {
-              showResultModal(res);
-            }
-          );
-        } else if (res.status === "キャンセル") {
-          showAutoToast(
-            "❌ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + (res.nickname || "") + " 様</span><br>" +
-            "<span style='font-size:18px; font-weight:700; color:#ff8a80;'>（キャンセル扱い）</span>",
-            3000,
-            true
-          );
-        }
-      } else {
-        showResultModal(res);
+      if (res.status === "未受付") {
+        // 未受付なら自動即時チェックイン＋バックグラウンド同期
+        confirmCheckInAuto(res);
+      } else if (res.status === "受付済") {
+        showAutoToast(
+          "⚠️ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + (res.nickname || "") + " 様</span><br>" +
+          "<span style='font-size:18px; font-weight:700; color:#ffeb3b;'>受付完了済み（" + (res.actualCount || res.count || 1) + "名）</span><br>" +
+          "<span style='font-size:12.5px; opacity:0.95; font-weight:700; display:inline-block; margin-top:6px; background:rgba(0,0,0,0.25); padding:4px 12px; border-radius:12px;'>👇 タップで人数を変更・修正</span>",
+          5000,
+          true,
+          function() {
+            showResultModal(res);
+          }
+        );
+      } else if (res.status === "キャンセル") {
+        showAutoToast(
+          "❌ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + (res.nickname || "") + " 様</span><br>" +
+          "<span style='font-size:18px; font-weight:700; color:#ff8a80;'>（キャンセル扱い）</span>",
+          3000,
+          true
+        );
       }
 
     } else {
-      if (isSmoothMode) {
-        showAutoToast("⚠️ <span style='font-size:18px;'>番号: " + targetCode + "</span><br><span style='font-size:16px;'>該当データがありません</span>", 3000, true);
-      } else {
-        document.getElementById('statusMsg').innerText = "❌ 該当なし: " + targetCode;
-        showAutoToast("❌ <span style='font-size:18px;'>番号: " + targetCode + "</span><br><span style='font-size:16px;'>該当データがありません</span>", 3000, true);
-        setTimeout(clearKey, 1500);
-      }
+      showAutoToast("⚠️ <span style='font-size:18px;'>番号: " + targetCode + "</span><br><span style='font-size:16px;'>該当データがありません</span>", 3000, true);
     }
   }
 
-  // スムーズモード時の自動即時チェックイン（ローカル更新 ＋ 送信キュー追加）
+  // 自動即時チェックイン（ローカル更新 ＋ カウンター更新 ＋ 送信キュー追加）
   function confirmCheckInAuto(data) {
     const strCode = String(data.code).trim();
     const actualCount = Number(data.count) || 1;
@@ -849,16 +838,17 @@
       item.actualCount = actualCount;
       localMasterData.set(strCode, item);
       localStorage.setItem('localMasterData', JSON.stringify(Array.from(localMasterData.values())));
+      updateVisitorCounter(); // カウンター即時更新
     }
 
     // 2. バックグラウンド送信キューに追加
     pendingSyncQueue.push({ code: strCode, count: actualCount });
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
-    // 照合確定音「ピ・ローン♪」（0.5秒遅延・厚み＆ロング余韻仕様）を発音
+    // 照合確定音「ピ・ローン♪」を発音
     playBeepSound();
 
-    // 3. 即時成功表示（5秒間。高視認性大型表示。タップで人数変更ダイアログ起動）
+    // 3. 即時成功表示（タップで人数変更ダイアログ起動可能）
     showAutoToast(
       "✅ <span style='font-size:22px; font-weight:900; color:#ffffff; display:inline-block; margin-bottom:2px;'>" + data.nickname + " 様</span><br>" +
       "<span style='font-size:19px; font-weight:900; color:#ffeb3b;'>（" + data.count + "名）受付完了！</span><br>" +
@@ -907,7 +897,6 @@
       grid.innerHTML = "";
       shortArea.style.display = 'block';
 
-      // 1グループ最大4名上限に合わせて、1名〜4名の選択ボタンを常時生成
       const limit = Math.max(maxCount, 4);
       for (let i = 1; i <= limit; i++) {
         const btn = document.createElement('button');
@@ -928,28 +917,25 @@
     updateDisplay();
   }
 
-  // 手動確認モードでの受付確定（ローカル即時反映 ＋ 送信キュー追加）
+  // モーダル等からの手動人数変更・受付確定
   function confirmCheckIn(count) {
     if (isLoading || !currentData) return;
     const strCode = String(currentData.code).trim();
     const actualCount = Number(count) || 1;
 
-    // 1. ローカルキャッシュの更新
     if (localMasterData.has(strCode)) {
       const item = localMasterData.get(strCode);
       item.status = '受付済';
       item.actualCount = actualCount;
       localMasterData.set(strCode, item);
       localStorage.setItem('localMasterData', JSON.stringify(Array.from(localMasterData.values())));
+      updateVisitorCounter(); // カウンター更新
     }
 
-    // 2. バックグラウンド送信キューに追加
     pendingSyncQueue.push({ code: strCode, count: actualCount });
     localStorage.setItem('pendingSyncQueue', JSON.stringify(pendingSyncQueue));
 
     closeResultModal();
-
-    // 照合確定音「ピ・ローン♪」を発音
     playBeepSound();
 
     showAutoToast(
@@ -958,14 +944,12 @@
       3000
     );
     clearKey();
-    // 受付完了後は自動でスキャンモードへ広々復帰
     toggleKeypadMode(false);
 
-    // 3. バックグラウンド同期起動
     triggerBackgroundSync();
   }
 
-  // バックグラウンド自動同期（キューの未送信データをGASへ送信）
+  // バックグラウンド自動同期
   function triggerBackgroundSync() {
     if (pendingSyncQueue.length === 0) {
       updateSyncStatusUI('online', 0);
@@ -1006,29 +990,18 @@
   let toastTimer = null;
   let toastFadeTimer = null;
 
-  // トースト表示機能（デフォルト3秒、タップイベントコールバック対応）
   function showAutoToast(msg, duration, isWarning, onClickCallback) {
-    if (toastTimer) {
-      clearTimeout(toastTimer);
-      toastTimer = null;
-    }
-    if (toastFadeTimer) {
-      clearTimeout(toastFadeTimer);
-      toastFadeTimer = null;
-    }
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    if (toastFadeTimer) { clearTimeout(toastFadeTimer); toastFadeTimer = null; }
 
-    // 前回のトーストがあれば、フェードアウトを待たず即座に削除（完全リセット）
     const oldToast = document.getElementById('autoToast');
-    if (oldToast) {
-      oldToast.remove();
-    }
+    if (oldToast) oldToast.remove();
 
     const toast = document.createElement('div');
     toast.id = 'autoToast';
     toast.className = 'toast-popup' + (isWarning ? ' toast-warning' : '');
     toast.innerHTML = msg;
 
-    // タップ・クリック時のコールバック処理を登録
     if (typeof onClickCallback === 'function') {
       toast.onclick = function() {
         if (toastTimer) clearTimeout(toastTimer);
@@ -1039,35 +1012,30 @@
     }
 
     document.body.appendChild(toast);
-
     const displayTime = duration || 3000;
 
     toastTimer = setTimeout(function() {
       if (toast && toast.parentNode) {
         toast.style.opacity = "0";
         toastFadeTimer = setTimeout(function() {
-          if (toast && toast.parentNode) {
-            toast.remove();
-          }
+          if (toast && toast.parentNode) toast.remove();
         }, 200);
       }
     }, displayTime);
   }
 
-  // QRコード読み取り検知音（パターンFベース / 3136Hz 三角波 / 0.3秒間）
+  // QRコード読み取り検知音（3136Hz 三角波 / 0.3秒）
   function playScanBeep() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'triangle'; // パターンF: 三角波
-      osc.frequency.setValueAtTime(3136, audioCtx.currentTime); // G7 (3136Hz)
-      gain.gain.setValueAtTime(1.0, audioCtx.currentTime); // 最大音量 (1.0)
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3); // 0.3秒間伸ばす
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(3136, audioCtx.currentTime);
+      gain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
@@ -1075,67 +1043,46 @@
     } catch (e) {}
   }
 
-  // 照合完了・受付成功音（「ピッ」から0.5秒遅延 / 厚みのある和音 ＆ 0.75秒ロング余韻の「ピ・ローン♪」）
+  // 受付成功音（ピ・ローン♪）
   function playBeepSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       
-      const delay = 0.5; // スキャン「ピッ」（0.3s）から0.5秒後に照合完了音を開始
+      const delay = 0.5;
       const startTime = audioCtx.currentTime + delay;
 
-      // 1音目「ピ」（C6: 1046.5Hz ＋ E6: 1318.5Hz の和音で厚みを追加）
       const osc1_a = audioCtx.createOscillator();
       const osc1_b = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
       
-      osc1_a.type = 'sine';
-      osc1_a.frequency.setValueAtTime(1046.5, startTime);
-      osc1_b.type = 'sine';
-      osc1_b.frequency.setValueAtTime(1318.51, startTime); // 3度上の和音
+      osc1_a.type = 'sine'; osc1_a.frequency.setValueAtTime(1046.5, startTime);
+      osc1_b.type = 'sine'; osc1_b.frequency.setValueAtTime(1318.51, startTime);
 
       gain1.gain.setValueAtTime(1.0, startTime);
       gain1.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
 
-      osc1_a.connect(gain1);
-      osc1_b.connect(gain1);
-      gain1.connect(audioCtx.destination);
+      osc1_a.connect(gain1); osc1_b.connect(gain1); gain1.connect(audioCtx.destination);
+      osc1_a.start(startTime); osc1_b.start(startTime);
+      osc1_a.stop(startTime + 0.12); osc1_b.stop(startTime + 0.12);
 
-      osc1_a.start(startTime);
-      osc1_b.start(startTime);
-      osc1_a.stop(startTime + 0.12);
-      osc1_b.stop(startTime + 0.12);
-
-      // 2音目「ローン」（G6: 1567.98Hz ＋ C7: 2093Hz のオクターブ和音 / 余韻を0.75秒に延長）
       const osc2_a = audioCtx.createOscillator();
       const osc2_b = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
       const t2 = startTime + 0.09;
 
-      osc2_a.type = 'sine';
-      osc2_a.frequency.setValueAtTime(1567.98, t2);
-      osc2_b.type = 'sine';
-      osc2_b.frequency.setValueAtTime(2093.00, t2); // 高音倍音（華やかさと厚み）
+      osc2_a.type = 'sine'; osc2_a.frequency.setValueAtTime(1567.98, t2);
+      osc2_b.type = 'sine'; osc2_b.frequency.setValueAtTime(2093.00, t2);
 
       gain2.gain.setValueAtTime(1.0, t2);
-      gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.75); // 0.75秒へロングスライド
+      gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.75);
 
-      osc2_a.connect(gain2);
-      osc2_b.connect(gain2);
-      gain2.connect(audioCtx.destination);
-
-      osc2_a.start(t2);
-      osc2_b.start(t2);
-      osc2_a.stop(t2 + 0.75);
-      osc2_b.stop(t2 + 0.75);
+      osc2_a.connect(gain2); osc2_b.connect(gain2); gain2.connect(audioCtx.destination);
+      osc2_a.start(t2); osc2_b.start(t2);
+      osc2_a.stop(t2 + 0.75); osc2_b.stop(t2 + 0.75);
     } catch (e) {}
   }
 
-  // ============================
-  // 常時QRコードスキャナー初期化
-  // ============================
   function initCameraScanner() {
     html5QrCode = new Html5Qrcode("reader");
     const config = {
@@ -1148,15 +1095,13 @@
       { facingMode: currentFacingMode },
       config,
       function onScanSuccess(decodedText) {
-        if (!isSmoothMode) {
-          const modal = document.getElementById('resultModal');
-          if (modal && modal.style.display === 'flex') return;
-        }
+        const modal = document.getElementById('resultModal');
+        if (modal && modal.style.display === 'flex') return;
 
         const code = extractCode(decodedText);
         if (code && code !== lastScannedCode && !isLoading) {
           lastScannedCode = code;
-          playScanBeep(); // 1. カメラがコードを検知した瞬間に「ピッ」と発音！
+          playScanBeep();
           inputCode = code;
           searchCode();
           
@@ -1187,11 +1132,10 @@
     const match = text.match(/\b\d{5}\b/);
     if (match) return match[0];
     const cleaned = text.trim();
-    if (/^\d{5}$/.test(cleaned)) return cleaned;
+    if (/^\d{5}\$/.test(cleaned)) return cleaned;
     return text.substring(0, 5);
   }
 
-  // 最速でイベントをバインド（待機時間を排除）
   document.addEventListener("DOMContentLoaded", function() {
     const startOverlay = document.getElementById('startOverlay');
     const btnCloseGuide = document.getElementById('btnCloseGuide');
